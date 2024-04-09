@@ -28,10 +28,20 @@ func main() {
 
 	for {
 		q := <-queueChan
-		err := importMedium(ctx, db, q, nil)
-		if err != nil {
-			log.Fatal("fetch error", err)
+		for {
+			parsed, next, err := importMedium(q, nil)
+			if err != nil {
+				log.Fatal("fetch error", err)
+			}
+			go func() {
+				err := save(ctx, db, parsed)
+				if err != nil {
+					log.Fatal("save error", err)
+				}
+			}()
+			if next == nil {
+				break
+			}
 		}
 	}
-
 }

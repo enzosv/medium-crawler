@@ -1,8 +1,6 @@
 package main
 
 import (
-	"context"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -67,6 +65,13 @@ type Post struct {
 	} `json:"virtuals"`
 }
 
+type Parsed struct {
+	tags        []Tag
+	users       []User
+	collections []Collection
+	posts       []Post
+}
+
 var lastRequest int64 = 0
 
 // https://github.com/enzosv/easy-ios/blob/dcdcfbcf6333ecaae08cb0dfe7f940225fbdafa4/easy/Models/Resource.swift#L11
@@ -105,7 +110,7 @@ func fetchMedium(url string) (Response, error) {
 	return response, nil
 }
 
-func importMedium(ctx context.Context, db *sql.DB, path string, next *Next) error {
+func importMedium(path string, next *Next) (Parsed, *Next, error) {
 	base := fmt.Sprintf("%s/_/api/%s/stream", ROOTURL, path)
 
 	if next != nil {
@@ -126,8 +131,9 @@ func importMedium(ctx context.Context, db *sql.DB, path string, next *Next) erro
 
 	res, err := fetchMedium(base)
 	if err != nil {
-		return err
+		return Parsed{}, nil, err
 	}
+
 	var users []User
 	for _, user := range res.Payload.References.User {
 		users = append(users, user)
@@ -142,23 +148,20 @@ func importMedium(ctx context.Context, db *sql.DB, path string, next *Next) erro
 		posts = append(posts, post)
 		users = append(users, User{post.Creator})
 		if post.Collection != "" {
-			collections = append(collections, Collection{post.Collection, ""})
+			collections = append(collections, Collection{post.Collection, nil})
 		}
 		for _, tag := range post.Virtuals.Tags {
-			tags = append(tags, Tag{tag.Slug, tag.Name})
+			tags = append(tags, Tag{tag.Slug})
 		}
 	}
-	err = save(ctx, db, tags, users, collections, posts)
-	if err != nil {
-		return err
-	}
+	parsed := Parsed{tags, users, collections, posts}
 	newNext := res.Payload.Paging.Next
 	if newNext != nil {
 		if next != nil && (newNext.To == next.To || newNext.Page == next.Page) {
 			// skip same next
-			return nil
+			return parsed, nil, nil
 		}
-		return importMedium(ctx, db, path, newNext)
+		return parsed, newNext, nil
 	}
-	return nil
+	return parsed, nil, nil
 }
