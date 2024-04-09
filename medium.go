@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"reflect"
 	"strings"
 	"time"
 )
@@ -157,7 +158,7 @@ func importMedium(path string, next *Next) (Parsed, *Next, error) {
 	parsed := Parsed{tags, users, collections, posts}
 	newNext := res.Payload.Paging.Next
 	if newNext != nil {
-		if next != nil && (newNext.To == next.To || newNext.Page == next.Page) {
+		if next != nil && (newNext.To == next.To || newNext.Page == next.Page || reflect.DeepEqual(newNext.IgnoredIds, next.IgnoredIds)) {
 			// skip same next
 			return parsed, nil, nil
 		}
