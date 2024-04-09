@@ -143,7 +143,7 @@ func save(ctx context.Context, db *sql.DB,
 }
 
 func queryIds(ctx context.Context, db *sql.DB, table, key string) ([]string, error) {
-	rows, err := db.QueryContext(ctx, fmt.Sprintf("select %s from %s;", key, table))
+	rows, err := db.QueryContext(ctx, fmt.Sprintf("SELECT %s FROM %s;", key, table))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -162,8 +162,9 @@ func queryIds(ctx context.Context, db *sql.DB, table, key string) ([]string, err
 
 func queryQueue(ctx context.Context, db *sql.DB, idChan chan string) error {
 	rows, err := db.QueryContext(ctx, `
-	select creator, collection from posts
-	order by  total_clap_count desc, recommend_count desc, response_count desc
+	SELECT creator, collection 
+	FROM posts
+	ORDER BY  total_clap_count desc
 	;`)
 	if err != nil {
 		log.Fatal(err)
@@ -233,4 +234,43 @@ func queryQueue(ctx context.Context, db *sql.DB, idChan chan string) error {
 	}
 	fmt.Println("queue", len(queue))
 	return nil
+}
+
+func popularCollections(ctx context.Context, db *sql.DB) {
+	query := `SELECT c.name, SUM(p.total_clap_count) 
+	FROM collections c
+	LEFT OUTER JOIN posts p 
+		ON p.collection = c.collection_id 
+	GROUP BY c.collection_id 
+	ORDER BY SUM(p.total_clap_count) DESC;`
+	_, err := db.QueryContext(ctx, query)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func popularUsers(ctx context.Context, db *sql.DB) {
+	query := `SELECT u.user_id, SUM(p.total_clap_count)
+	FROM users u
+	LEFT OUTER JOIN posts p 
+		ON p.creator = u.user_id  
+	GROUP BY u.user_id 
+	ORDER BY SUM(p.total_clap_count) DESC;`
+	_, err := db.QueryContext(ctx, query)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func popularPosts(ctx context.Context, db *sql.DB) {
+	query := `SELECT title, total_clap_count claps, 'https://medium.com/articles/' || post_id, date(published_at/1000, 'unixepoch') publish_date, 
+	c.name collection, recommend_count , response_count , reading_time ,tags 
+	FROM posts p
+	LEFT OUTER JOIN collections c
+		ON c.collection_id = p.collection 
+	ORDER BY total_clap_count DESC;`
+	_, err := db.QueryContext(ctx, query)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
