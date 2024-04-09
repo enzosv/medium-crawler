@@ -15,17 +15,17 @@ import (
 
 func migrate(db *sql.DB) {
 	migration := `
-	CREATE TABLE tags (slug TEXT not null primary key);
-	CREATE TABLE users (user_id TEXT not null primary key);
-	CREATE TABLE collections (collection_id TEXT not null primary key, name TEXT);
+	CREATE TABLE tags (slug TEXT NOT NULL primary key);
+	CREATE TABLE users (user_id TEXT NOT NULL primary key);
+	CREATE TABLE collections (collection_id TEXT NOT NULL primary key, name TEXT);
 	CREATE TABLE posts (
-		post_id TEXT not null primary key,
-		title TEXT not null,
-		published_at INTEGER not null,
+		post_id TEXT NOT NULL primary key,
+		title TEXT NOT NULL,
+		published_at INTEGER NOT NULL,
 		updated_at INTEGER,
 		collection TEXT,
-		creator TEXT not null,
-		is_paid INTEGER not null default 0,
+		creator TEXT NOT NULL,
+		is_paid INTEGER NOT NULL default 0,
 		reading_time REAL,
 		total_clap_count INTEGER,
 		tags TEXT,
