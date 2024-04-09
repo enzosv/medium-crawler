@@ -38,7 +38,6 @@ type Reference struct {
 
 type Tag struct {
 	Slug string `json:"slug"`
-	Name string `json:"name"`
 }
 
 type User struct {
@@ -46,8 +45,8 @@ type User struct {
 }
 
 type Collection struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID   string  `json:"id"`
+	Name *string `json:"name"`
 }
 
 type Post struct {

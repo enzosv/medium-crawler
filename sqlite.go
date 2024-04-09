@@ -12,9 +12,9 @@ import (
 
 func migrate(db *sql.DB) {
 	migration := `
-	CREATE TABLE tags (slug TEXT not null primary key, name TEXT not null);
+	CREATE TABLE tags (slug TEXT not null primary key);
 	CREATE TABLE users (user_id TEXT not null primary key);
-	CREATE TABLE collections (collection_id TEXT not null primary key, name TEXT not null);
+	CREATE TABLE collections (collection_id TEXT not null primary key, name TEXT);
 	CREATE TABLE posts (
 		post_id TEXT not null primary key,
 		title TEXT not null,
@@ -39,16 +39,14 @@ func migrate(db *sql.DB) {
 
 }
 
-func save(ctx context.Context, db *sql.DB,
-	tags []Tag, users []User, collections []Collection, posts []Post,
-) error {
+func save(ctx context.Context, db *sql.DB, parsed Parsed) error {
 	fmt.Printf("saving\n\t%d posts\n\t%d users\n\t%d collections\n\t%d tags\n",
-		len(posts), len(users), len(collections), len(tags))
+		len(parsed.posts), len(parsed.users), len(parsed.collections), len(parsed.tags))
 	tx, err := db.Begin()
 	if err != nil {
 		return err
 	}
-	if len(posts) > 0 {
+	if len(parsed.posts) > 0 {
 		// TODO: upsert on post_id, updated_at. ignore on post_id
 		insert, err := tx.Prepare(`INSERT INTO posts(
 			post_id,
@@ -86,7 +84,7 @@ func save(ctx context.Context, db *sql.DB,
 			return err
 		}
 		defer insert.Close()
-		for _, post := range posts {
+		for _, post := range parsed.posts {
 			var tags []string
 			for _, tag := range post.Virtuals.Tags {
 				tags = append(tags, tag.Slug)
@@ -112,39 +110,39 @@ func save(ctx context.Context, db *sql.DB,
 		}
 	}
 
-	if len(tags) > 0 {
-		insert, err := tx.Prepare("INSERT OR IGNORE INTO tags(slug, name) values(?, ?)")
+	if len(parsed.tags) > 0 {
+		insert, err := tx.Prepare("INSERT OR IGNORE INTO tags(slug) values(?)")
 		if err != nil {
 			return err
 		}
 		defer insert.Close()
-		for _, tag := range tags {
-			_, err = insert.ExecContext(ctx, tag.Slug, tag.Name)
+		for _, tag := range parsed.tags {
+			_, err = insert.ExecContext(ctx, tag.Slug)
 			if err != nil {
 				return err
 			}
 		}
 	}
-	if len(users) > 0 {
+	if len(parsed.users) > 0 {
 		insert, err := tx.Prepare("INSERT OR IGNORE INTO users(user_id) values(?)")
 		if err != nil {
 			return err
 		}
 		defer insert.Close()
-		for _, user := range users {
+		for _, user := range parsed.users {
 			_, err = insert.ExecContext(ctx, user.UserID)
 			if err != nil {
 				return err
 			}
 		}
 	}
-	if len(collections) > 0 {
+	if len(parsed.collections) > 0 {
 		insert, err := tx.Prepare("INSERT OR IGNORE INTO collections(collection_id, name) values(?, ?)")
 		if err != nil {
 			return err
 		}
 		defer insert.Close()
-		for _, collection := range collections {
+		for _, collection := range parsed.collections {
 			_, err = insert.ExecContext(ctx, collection.ID, collection.Name)
 			if err != nil {
 				return err
