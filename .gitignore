@@ -1,0 +1,4 @@
+.DS_STORE
+*.json
+*.db-shm
+*.db-wal
