@@ -11,6 +11,8 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+// TODO: parse https://topmediumstories.com/data/medium_1539563874.json
+
 func migrate(db *sql.DB) {
 	migration := `
 	CREATE TABLE tags (slug TEXT not null primary key);
