@@ -4,7 +4,7 @@ async function main() {
   });
 
   const dataPromise = fetch(
-    "https://github.com/enzosv/medium-crawler/blob/main/medium.db"
+    "https://raw.githubusercontent.com/enzosv/medium-crawler/main/medium.db"
   ).then((res) => res.arrayBuffer());
   const [SQL, buf] = await Promise.all([sqlPromise, dataPromise]);
   const db = new SQL.Database(new Uint8Array(buf));
