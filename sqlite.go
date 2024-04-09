@@ -50,7 +50,7 @@ func save(ctx context.Context, db *sql.DB,
 	}
 	if len(posts) > 0 {
 		// TODO: upsert on post_id, updated_at. ignore on post_id
-		insert, err := tx.Prepare(`INSERT OR IGNORE INTO posts(
+		insert, err := tx.Prepare(`INSERT INTO posts(
 			post_id,
 			title,
 			published_at,
@@ -66,7 +66,22 @@ func save(ctx context.Context, db *sql.DB,
 			response_count
 		) values(
 			?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-		)`)
+		)
+		ON CONFLICT(post_id) 
+  		DO UPDATE SET 
+		  title = EXCLUDED.title,
+		  published_at = EXCLUDED.published_at,
+		  updated_at = EXCLUDED.updated_at,
+		  collection = EXCLUDED.collection,
+		  creator = EXCLUDED.creator,
+		  is_paid = EXCLUDED.is_paid,
+		  reading_time = EXCLUDED.reading_time,
+		  total_clap_count = EXCLUDED.total_clap_count,
+		  tags = EXCLUDED.tags,
+		  subtitle = EXCLUDED.subtitle,
+		  recommend_count = EXCLUDED.recommend_count,
+		  response_count = EXCLUDED.response_count
+		;`)
 		if err != nil {
 			return err
 		}
