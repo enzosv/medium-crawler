@@ -21,7 +21,7 @@ func main() {
 	ctx := context.Background()
 	queueChan := make(chan string)
 	go func() {
-		err = queryQueue(ctx, db, queueChan)
+		err = queryPages(ctx, db, queueChan)
 		if err != nil {
 			log.Fatal("queue error", err)
 		}
@@ -35,14 +35,35 @@ func main() {
 			if err != nil {
 				log.Fatal("fetch error", err)
 			}
-			go func() {
-				err := save(ctx, db, parsed)
-				if err != nil {
-					log.Fatal("save error", err)
-				}
-				fmt.Printf("saved\n\t%d posts\n\t%d users\n\t%d collections\n\t%d tags\n",
-					len(parsed.posts), len(parsed.users), len(parsed.collections), len(parsed.tags))
-			}()
+			if len(parsed.collections) == 0 && len(parsed.tags) == 0 &&
+				len(parsed.users) == 0 && len(parsed.posts) == 0 {
+				break
+			}
+			// go func() {
+			previousCount, err := countPosts(ctx, db)
+			if err != nil {
+				log.Fatal("count error", err)
+			}
+			fmt.Printf("saving\n\t%d posts\n\t%d users\n\t%d collections\n\t%d tags\n",
+				len(parsed.posts), len(parsed.users), len(parsed.collections), len(parsed.tags))
+			err = save(ctx, db, parsed)
+			if err != nil {
+				log.Fatal("save error", err)
+			}
+			err = logPage(ctx, db, q)
+			if err != nil {
+				log.Fatal("log error", err)
+			}
+			newCount, err := countPosts(ctx, db)
+			if err != nil {
+				log.Fatal("count 2 error", err)
+			}
+			fmt.Printf("found %d new posts\n", newCount-previousCount)
+			// if newCount == previousCount {
+			// fast mode
+			// break
+			// }
+			// }()
 			next = newNext
 			if next == nil {
 				break

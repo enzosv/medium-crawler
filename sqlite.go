@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -39,8 +40,18 @@ func migrate(db *sql.DB) {
 
 }
 
-func save(ctx context.Context, db *sql.DB, parsed Parsed) error {
+func countPosts(ctx context.Context, db *sql.DB) (int, error) {
+	var count int
+	countQuery := db.QueryRowContext(ctx, "select count(*) from posts;")
+	err := countQuery.Err()
+	if err != nil {
+		return count, err
+	}
+	err = countQuery.Scan(&count)
+	return count, err
+}
 
+func save(ctx context.Context, db *sql.DB, parsed Parsed) error {
 	tx, err := db.Begin()
 	if err != nil {
 		return err
@@ -115,8 +126,19 @@ func save(ctx context.Context, db *sql.DB, parsed Parsed) error {
 			return err
 		}
 		defer insert.Close()
+
+		logs, err := tx.Prepare("INSERT OR IGNORE INTO pages(link) values(?)")
+		if err != nil {
+			return err
+		}
+		defer logs.Close()
+
 		for _, tag := range parsed.tags {
 			_, err = insert.ExecContext(ctx, tag.Slug)
+			if err != nil {
+				return err
+			}
+			_, err = logs.ExecContext(ctx, fmt.Sprintf("tags/%s", tag.Slug))
 			if err != nil {
 				return err
 			}
@@ -128,8 +150,17 @@ func save(ctx context.Context, db *sql.DB, parsed Parsed) error {
 			return err
 		}
 		defer insert.Close()
+		logs, err := tx.Prepare("INSERT OR IGNORE INTO pages(link) values(?)")
+		if err != nil {
+			return err
+		}
+		defer logs.Close()
 		for _, user := range parsed.users {
 			_, err = insert.ExecContext(ctx, user.UserID)
+			if err != nil {
+				return err
+			}
+			_, err = logs.ExecContext(ctx, fmt.Sprintf("users/%s/profile", user.UserID))
 			if err != nil {
 				return err
 			}
@@ -141,14 +172,22 @@ func save(ctx context.Context, db *sql.DB, parsed Parsed) error {
 			return err
 		}
 		defer insert.Close()
+		logs, err := tx.Prepare("INSERT OR IGNORE INTO pages(link) values(?)")
+		if err != nil {
+			return err
+		}
+		defer logs.Close()
 		for _, collection := range parsed.collections {
 			_, err = insert.ExecContext(ctx, collection.ID, collection.Name)
 			if err != nil {
 				return err
 			}
+			_, err = logs.ExecContext(ctx, fmt.Sprintf("collections/%s", collection.ID))
+			if err != nil {
+				return err
+			}
 		}
 	}
-
 	return tx.Commit()
 }
 
@@ -283,4 +322,33 @@ func popularPosts(ctx context.Context, db *sql.DB) {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func logPage(ctx context.Context, db *sql.DB, link string) error {
+	query := `INSERT INTO pages (link, last_query) 
+	values(?, ?)
+	ON CONFLICT(link) 
+	DO UPDATE SET last_query = EXCLUDED.last_query`
+	_, err := db.ExecContext(ctx, query, link, time.Now().Unix())
+	return err
+}
+
+func queryPages(ctx context.Context, db *sql.DB, idChan chan string) error {
+	rows, err := db.QueryContext(ctx, `
+	SELECT link
+	FROM pages
+	ORDER BY  last_query
+	;`)
+	if err != nil {
+		return err
+	}
+	for rows.Next() {
+		var link string
+		err := rows.Scan(&link)
+		if err != nil {
+			return err
+		}
+		idChan <- link
+	}
+	return rows.Close()
 }
