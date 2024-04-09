@@ -75,7 +75,7 @@ func fetchMedium(url string) (Response, error) {
 	dif := time.Now().Unix() - lastRequest
 	if dif < 3 {
 		// avoid rate limit
-		fmt.Println("\tsleeping", 3-dif)
+		fmt.Println("sleeping", 3-dif)
 		time.Sleep(time.Second * time.Duration(16-dif))
 	}
 	lastRequest = time.Now().Unix()
@@ -137,9 +137,17 @@ func importMedium(ctx context.Context, db *sql.DB, path string, next *Next) erro
 	for _, collection := range res.Payload.References.Collection {
 		collections = append(collections, collection)
 	}
+	tags := res.Payload.RelatedTags
 	var posts []Post
 	for _, post := range res.Payload.References.Post {
 		posts = append(posts, post)
+		users = append(users, User{post.Creator})
+		if post.Collection != "" {
+			collections = append(collections, Collection{post.Collection, ""})
+		}
+		for _, tag := range post.Virtuals.Tags {
+			tags = append(tags, Tag{tag.Slug, tag.Name})
+		}
 	}
 	err = save(ctx, db, res.Payload.RelatedTags, users, collections, posts)
 	if err != nil {

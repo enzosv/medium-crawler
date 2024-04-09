@@ -40,8 +40,10 @@ func migrate(db *sql.DB) {
 }
 
 func save(ctx context.Context, db *sql.DB,
-	_tags []Tag, _users []User, _collections []Collection, posts []Post,
+	tags []Tag, users []User, collections []Collection, posts []Post,
 ) error {
+	fmt.Printf("saving\n\t%d posts\n\t%d users\n\t%d collections\n\t%d tags\n",
+		len(posts), len(users), len(collections), len(tags))
 	tx, err := db.Begin()
 	if err != nil {
 		return err
@@ -73,11 +75,6 @@ func save(ctx context.Context, db *sql.DB,
 			var tags []string
 			for _, tag := range post.Virtuals.Tags {
 				tags = append(tags, tag.Slug)
-				_tags = append(_tags, Tag{tag.Slug, tag.Name})
-			}
-			_users = append(_users, User{post.Creator})
-			if post.Collection != "" {
-				_collections = append(_collections, Collection{post.Collection, ""})
 			}
 			_, err = insert.ExecContext(ctx,
 				post.ID,
@@ -100,39 +97,39 @@ func save(ctx context.Context, db *sql.DB,
 		}
 	}
 
-	if len(_tags) > 0 {
+	if len(tags) > 0 {
 		insert, err := tx.Prepare("INSERT OR IGNORE INTO tags(slug, name) values(?, ?)")
 		if err != nil {
 			return err
 		}
 		defer insert.Close()
-		for _, tag := range _tags {
+		for _, tag := range tags {
 			_, err = insert.ExecContext(ctx, tag.Slug, tag.Name)
 			if err != nil {
 				return err
 			}
 		}
 	}
-	if len(_users) > 0 {
+	if len(users) > 0 {
 		insert, err := tx.Prepare("INSERT OR IGNORE INTO users(user_id) values(?)")
 		if err != nil {
 			return err
 		}
 		defer insert.Close()
-		for _, user := range _users {
+		for _, user := range users {
 			_, err = insert.ExecContext(ctx, user.UserID)
 			if err != nil {
 				return err
 			}
 		}
 	}
-	if len(_collections) > 0 {
+	if len(collections) > 0 {
 		insert, err := tx.Prepare("INSERT OR IGNORE INTO collections(collection_id, name) values(?, ?)")
 		if err != nil {
 			return err
 		}
 		defer insert.Close()
-		for _, collection := range _collections {
+		for _, collection := range collections {
 			_, err = insert.ExecContext(ctx, collection.ID, collection.Name)
 			if err != nil {
 				return err
