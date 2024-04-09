@@ -149,7 +149,7 @@ func importMedium(ctx context.Context, db *sql.DB, path string, next *Next) erro
 			tags = append(tags, Tag{tag.Slug, tag.Name})
 		}
 	}
-	err = save(ctx, db, res.Payload.RelatedTags, users, collections, posts)
+	err = save(ctx, db, tags, users, collections, posts)
 	if err != nil {
 		return err
 	}
