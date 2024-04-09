@@ -3,7 +3,9 @@ async function main() {
     locateFile: (file) => `https://sql.js.org/dist/${file}`,
   });
 
-  const dataPromise = fetch("../medium.db").then((res) => res.arrayBuffer());
+  const dataPromise = fetch(
+    "https://github.com/enzosv/medium-crawler/blob/main/medium.db"
+  ).then((res) => res.arrayBuffer());
   const [SQL, buf] = await Promise.all([sqlPromise, dataPromise]);
   const db = new SQL.Database(new Uint8Array(buf));
   const stmt = db.prepare(
@@ -31,26 +33,32 @@ async function main() {
         render: function (data, type, row) {
           return `<div>
           <a href=${row.link}>${row.title}</a><br>
-          ${row.collection ? `<subtitle>in ${row.collection}<br>` : ""}
+          ${row.collection ? `<subtitle>in ${row.collection}` : ""}
           <img src="calendar-arrow-up-svgrepo-com.svg" width="16" height="16"/> ${
             row.publish_date
           }<br>
-          <img src="clap-svgrepo-com.svg" width="16" height="16"/> ${row.claps}
+          <img src="clap-svgrepo-com.svg" width="16" height="16"/> ${numberWithCommas(
+            row.claps
+          )}
           <img src="time-svgrepo-com.svg" width="16" height="16"/> ${Math.round(
             row.reading_time
           )}
-          <img src="share-svgrepo-com.svg" width="16" height="16"/> ${
+          <img src="share-svgrepo-com.svg" width="16" height="16"/> ${numberWithCommas(
             row.recommend_count
-          }
-          <img src="comment-svgrepo-com.svg" width="16" height="16"/> ${
+          )}
+          <img src="comment-svgrepo-com.svg" width="16" height="16"/> ${numberWithCommas(
             row.response_count
-          }
+          )}
           </subtitle>
           </div>`;
         },
       },
     ],
   });
+}
+
+function numberWithCommas(x) {
+  return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
 main();
