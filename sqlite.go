@@ -98,6 +98,7 @@ func save(ctx context.Context, db *sql.DB,
 			}
 		}
 	}
+
 	if len(_tags) > 0 {
 		insert, err := tx.Prepare("INSERT OR IGNORE INTO tags(slug, name) values(?, ?)")
 		if err != nil {
@@ -141,24 +142,6 @@ func save(ctx context.Context, db *sql.DB,
 	return tx.Commit()
 }
 
-func queryTags(ctx context.Context, db *sql.DB) ([]string, error) {
-	rows, err := db.QueryContext(ctx, "select slug from tags;")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer rows.Close()
-	var tags []string
-	for rows.Next() {
-		var slug string
-		err = rows.Scan(&slug)
-		if err != nil {
-			log.Fatal(err)
-		}
-		tags = append(tags, slug)
-	}
-	return tags, rows.Close()
-}
-
 func queryIds(ctx context.Context, db *sql.DB, table, key string) ([]string, error) {
 	rows, err := db.QueryContext(ctx, fmt.Sprintf("select %s from %s;", key, table))
 	if err != nil {
@@ -175,11 +158,6 @@ func queryIds(ctx context.Context, db *sql.DB, table, key string) ([]string, err
 		ids = append(ids, id)
 	}
 	return ids, rows.Close()
-}
-
-type QueueItem struct {
-	Type string
-	ID   string
 }
 
 func queryQueue(ctx context.Context, db *sql.DB, idChan chan string) error {
@@ -202,73 +180,57 @@ func queryQueue(ctx context.Context, db *sql.DB, idChan chan string) error {
 		_, ok := queue[item]
 		if !ok {
 			queue[item] = true
-			idChan <- item
+			go func() { idChan <- item }()
 		}
 		if collection != nil && *collection != "" {
 			item = fmt.Sprintf("collections/%s", *collection)
 			_, ok := queue[item]
 			if !ok {
 				queue[item] = true
-				idChan <- item
+				go func() { idChan <- item }()
 			}
 		}
 	}
 	rows.Close()
 	// users
-	rows, err = db.QueryContext(ctx, `select user_id from users;`)
+	users, err := queryIds(ctx, db, "users", "user_id")
 	if err != nil {
-		return err
+		log.Fatal(err)
 	}
-	for rows.Next() {
-		var id string
-		err = rows.Scan(&id)
-		if err != nil {
-			return err
-		}
+	for _, id := range users {
 		item := fmt.Sprintf("users/%s/profile", id)
 		_, ok := queue[item]
 		if !ok {
 			queue[item] = true
-			idChan <- item
+			go func() { idChan <- item }()
 		}
 	}
-	rows.Close()
 	//collections
-	rows, err = db.QueryContext(ctx, `select collection_id from collections;`)
+	collections, err := queryIds(ctx, db, "collections", "collection_id")
 	if err != nil {
-		return err
+		log.Fatal(err)
 	}
-	for rows.Next() {
-		var id string
-		err = rows.Scan(&id)
-		if err != nil {
-			return err
-		}
+	for _, id := range collections {
 		item := fmt.Sprintf("collections/%s", id)
 		_, ok := queue[item]
 		if !ok {
 			queue[item] = true
-			idChan <- item
+			go func() { idChan <- item }()
 		}
 	}
-	rows.Close()
 	// tags
-	rows, err = db.QueryContext(ctx, `select slug from tags;`)
+	tags, err := queryIds(ctx, db, "tags", "slug")
 	if err != nil {
-		return err
+		log.Fatal(err)
 	}
-	for rows.Next() {
-		var id string
-		err = rows.Scan(&id)
-		if err != nil {
-			return err
-		}
+	for _, id := range tags {
 		item := fmt.Sprintf("tags/%s", id)
 		_, ok := queue[item]
 		if !ok {
 			queue[item] = true
-			idChan <- item
+			go func() { idChan <- item }()
 		}
 	}
-	return rows.Close()
+	fmt.Println("queue", len(queue))
+	return nil
 }
