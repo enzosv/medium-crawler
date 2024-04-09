@@ -40,8 +40,7 @@ func migrate(db *sql.DB) {
 }
 
 func save(ctx context.Context, db *sql.DB, parsed Parsed) error {
-	fmt.Printf("saving\n\t%d posts\n\t%d users\n\t%d collections\n\t%d tags\n",
-		len(parsed.posts), len(parsed.users), len(parsed.collections), len(parsed.tags))
+
 	tx, err := db.Begin()
 	if err != nil {
 		return err
