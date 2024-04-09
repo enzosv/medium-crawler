@@ -47,6 +47,7 @@ func save(ctx context.Context, db *sql.DB,
 		return err
 	}
 	if len(posts) > 0 {
+		// TODO: upsert on post_id, updated_at. ignore on post_id
 		insert, err := tx.Prepare(`INSERT OR IGNORE INTO posts(
 			post_id,
 			title,
