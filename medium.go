@@ -96,6 +96,7 @@ func fetchMedium(url string) (Response, error) {
 	if err != nil {
 		return response, err
 	}
+	res.Body.Close()
 	data := strings.TrimPrefix(string(body), "])}while(1);</x>")
 
 	err = json.Unmarshal([]byte(data), &response)
@@ -105,7 +106,7 @@ func fetchMedium(url string) (Response, error) {
 	return response, nil
 }
 
-func importMedium(db *sql.DB, path string, next *Next) error {
+func importMedium(ctx context.Context, db *sql.DB, path string, next *Next) error {
 	base := fmt.Sprintf("%s/_/api/%s/stream", ROOTURL, path)
 
 	if next != nil {
@@ -140,7 +141,7 @@ func importMedium(db *sql.DB, path string, next *Next) error {
 	for _, post := range res.Payload.References.Post {
 		posts = append(posts, post)
 	}
-	err = save(context.Background(), db, res.Payload.RelatedTags, users, collections, posts)
+	err = save(ctx, db, res.Payload.RelatedTags, users, collections, posts)
 	if err != nil {
 		return err
 	}
@@ -150,7 +151,7 @@ func importMedium(db *sql.DB, path string, next *Next) error {
 			// skip same next
 			return nil
 		}
-		return importMedium(db, path, newNext)
+		return importMedium(ctx, db, path, newNext)
 	}
 	return nil
 }

@@ -28,7 +28,7 @@ func main() {
 
 	for {
 		q := <-queueChan
-		err := importMedium(db, q, nil)
+		err := importMedium(ctx, db, q, nil)
 		if err != nil {
 			log.Fatal("fetch error", err)
 		}
