@@ -146,7 +146,11 @@ func importMedium(db *sql.DB, path string, next *Next) error {
 	}
 	newNext := res.Payload.Paging.Next
 	if newNext != nil {
+		if next != nil && (newNext.To == next.To || newNext.Page == next.Page) {
+			// skip same next
+			return nil
+		}
 		return importMedium(db, path, newNext)
 	}
-	return err
+	return nil
 }
