@@ -55,7 +55,7 @@ type Post struct {
 	UpdatedAt   int64  `json:"updatedAt"`
 	Collection  string `json:"homeCollectionId"`
 	Creator     string `json:"creatorId"`
-	IsPaid      bool   `json:"isMarkedPaywallOnly"`
+	IsPaid      bool   `json:"isSubscriptionLocked"`
 	Virtuals    struct {
 		ReadingTime    float64 `json:"readingTime"`
 		TotalClapCount int     `json:"totalClapCount"`
