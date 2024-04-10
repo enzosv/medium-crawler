@@ -16,6 +16,7 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
+	defer db.Exec("vaccum;")
 	defer db.Close()
 	db.Exec("PRAGMA journal_mode=WAL;")
 	db.Exec("PRAGMA locking_mode=IMMEDIATE;")
