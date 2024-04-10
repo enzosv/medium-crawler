@@ -75,6 +75,7 @@ async function omnivore(link) {
         source: "api",
         url: link,
         clientRequestId: crypto.randomUUID(),
+        labels: [{ name: "medium-crawler" }],
       },
     },
   };
