@@ -81,7 +81,7 @@ func fetchMedium(url string) (Response, error) {
 	if dif < 3 {
 		// avoid rate limit
 		fmt.Println("sleeping", 3-dif)
-		time.Sleep(time.Second * time.Duration(16-dif))
+		time.Sleep(time.Second * time.Duration(3-dif))
 	}
 	lastRequest = time.Now().Unix()
 	fmt.Println("fetching", url)
