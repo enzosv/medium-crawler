@@ -21,6 +21,7 @@ type Post struct {
 	response_count  int
 	reading_time    float64
 	tags            string
+	is_paid         int
 }
 
 func main() {
@@ -47,7 +48,7 @@ func toCSV(posts []Post) error {
 		wr.Write([]string{
 			title, fmt.Sprintf("%d", post.claps), post.link, post.publish_date, post.collection,
 			fmt.Sprintf("%d", post.recommend_count), fmt.Sprintf("%d", post.response_count), fmt.Sprintf("%.2f", post.reading_time),
-			strings.ReplaceAll(post.tags, ",", "|"),
+			strings.ReplaceAll(post.tags, ",", "|"), fmt.Sprintf("%d", post.is_paid),
 		})
 	}
 	wr.Flush()
@@ -64,7 +65,7 @@ func query() ([]Post, error) {
     post_id, 
     date(published_at/1000, 'unixepoch'),
 	COALESCE(c.name, ''), 
-    recommend_count, response_count, reading_time, tags
+    recommend_count, response_count, reading_time, tags, is_paid
     FROM posts p
     LEFT OUTER JOIN collections c
         ON c.collection_id = p.collection
@@ -79,7 +80,7 @@ func query() ([]Post, error) {
 	for rows.Next() {
 		var post Post
 		err = rows.Scan(&post.title, &post.claps, &post.link, &post.publish_date, &post.collection,
-			&post.recommend_count, &post.response_count, &post.reading_time, &post.tags)
+			&post.recommend_count, &post.response_count, &post.reading_time, &post.tags, &post.is_paid)
 		if err != nil {
 			return nil, err
 		}
