@@ -17,12 +17,18 @@ async function main() {
           <img src="clap-svgrepo-com.svg" width="16" height="16"/> ${row[1]}
           <img src="time-svgrepo-com.svg" width="16" height="16"/> ${row[7]}
           <img src="share-svgrepo-com.svg" width="16" height="16"/> ${row[5]}
-          <img src="comment-svgrepo-com.svg" width="16" height="16"/> ${row[6]}
+          <img src="comment-svgrepo-com.svg" width="16" height="16"/> ${
+            row[6]
+          }<br>
           </subtitle>
+          <a style="text-decoration: none; display: flex; align-items: center;" tabindex="-1" aria-label="Omnivore logo" href="https://omnivore.app/api/save?url=https://freedium.cfd/${
+            row[2]
+          }">
           </div>`;
         },
       },
     ],
   });
 }
+
 main();
