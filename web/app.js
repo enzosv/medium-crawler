@@ -2,16 +2,18 @@ async function main() {
   let data = await fetch("./medium.csv").then((response) => response.text());
   data = data.split("\n").map((v) => v.split(","));
   $("#example").DataTable({
+    pageLength: 25,
     data: data,
     order: [[1, "desc"]],
     columns: [
       {
         data: "title",
         render: function (data, type, row) {
-          return `<div>
+          return `<div class="row">
           <a href=https://medium.com/articles/${row[2]}>
-          ${row[0].replaceAll("|", ",")}</a><br>
-          ${row[4] ? `<subtitle>in ${row[4]}` : ""}
+          <h5>${row[0].replaceAll("|", ",")}</h5></a>
+          <subtitle>
+          ${row[4] ? `in ${row[4]}` : ""}
           <img src="calendar-arrow-up-svgrepo-com.svg" width="16" height="16"/> ${
             row[3]
           }<br>
@@ -21,11 +23,11 @@ async function main() {
           <img src="comment-svgrepo-com.svg" width="16" height="16"/> ${
             row[6]
           }<br>
-          </subtitle>
-          <a style="text-decoration: none; display: flex; align-items: center;" tabindex="-1" aria-label="Omnivore logo" href="https://omnivore.app/api/save?url=https://freedium.cfd/${
+          <a href="https://omnivore.app/api/save?url=https://freedium.cfd/https://medium.com/articles/${
             row[2]
           }"></a>
           ${row[8] ? row[8].replaceAll("|", ", ") : ""}
+          </subtitle>
           </div>`;
         },
       },
