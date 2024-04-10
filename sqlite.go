@@ -220,6 +220,7 @@ func queryQueue(ctx context.Context, db *sql.DB, idChan chan string) error {
 	if err != nil {
 		return err
 	}
+	defer rows.Close()
 	queue := map[string]bool{}
 	for rows.Next() {
 		var creator string
@@ -338,6 +339,7 @@ func queryPages(ctx context.Context, db *sql.DB, idChan chan string) error {
 	if err != nil {
 		return err
 	}
+	defer rows.Close()
 	for rows.Next() {
 		var link string
 		err := rows.Scan(&link)
@@ -346,5 +348,5 @@ func queryPages(ctx context.Context, db *sql.DB, idChan chan string) error {
 		}
 		idChan <- link
 	}
-	return rows.Close()
+	return nil
 }
