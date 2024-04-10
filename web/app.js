@@ -2,8 +2,8 @@ async function main() {
   let data = await fetch("./medium.csv").then((response) => response.text());
   data = data.split("\n").map((v) => v.split(","));
   $("#example").DataTable({
-    pageLength: 25,
     data: data,
+    ordering: false,
     order: [[1, "desc"]],
     columns: [
       {
@@ -11,8 +11,8 @@ async function main() {
         render: function (data, type, row) {
           return `<div class="row">
           <a href=https://medium.com/articles/${row[2]}>
-          <h5>${row[0].replaceAll("|", ",")}</h5></a>
-          <subtitle>
+          <h6>${row[0].replaceAll("|", ",")}</h6></a>
+          <div>
           ${row[4] ? `in ${row[4]}` : ""}
           <img src="calendar-arrow-up-svgrepo-com.svg" width="16" height="16"/> ${
             row[3]
@@ -27,7 +27,7 @@ async function main() {
             row[2]
           }"></a>
           ${row[8] ? row[8].replaceAll("|", ", ") : ""}
-          </subtitle>
+          </div>
           </div>`;
         },
       },
