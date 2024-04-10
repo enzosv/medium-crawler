@@ -42,8 +42,10 @@ func toCSV(posts []Post) error {
 	defer csvFile.Close()
 	wr := csv.NewWriter(csvFile)
 	for _, post := range posts {
+		title := strings.ReplaceAll(post.title, ",", "|")
+		title = strings.ReplaceAll(title, "\n", " ")
 		wr.Write([]string{
-			strings.ReplaceAll(post.title, ",", "|"), fmt.Sprintf("%d", post.claps), post.link, post.publish_date, post.collection,
+			title, fmt.Sprintf("%d", post.claps), post.link, post.publish_date, post.collection,
 			fmt.Sprintf("%d", post.recommend_count), fmt.Sprintf("%d", post.response_count), fmt.Sprintf("%.2f", post.reading_time),
 			strings.ReplaceAll(post.tags, ",", "|"),
 		})
