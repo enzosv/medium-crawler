@@ -53,7 +53,7 @@ func toCSV(posts []Post) error {
 }
 
 func query() ([]Post, error) {
-	db, err := sql.Open("sqlite3", "../medium.db")
+	db, err := sql.Open("sqlite", "../medium.db")
 	if err != nil {
 		return nil, err
 	}
