@@ -1,6 +1,7 @@
 async function main() {
   let data = await fetch("./medium.csv").then((response) => response.text());
   data = data.split("\n").map((v) => v.split(","));
+  data.pop(); // remove newline at end
   $("#example").DataTable({
     data: data,
     ordering: false,
