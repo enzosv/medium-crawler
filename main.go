@@ -16,7 +16,7 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
-	defer db.Exec("vaccum;")
+	defer db.Exec("vacuum;")
 	defer db.Close()
 	db.Exec("PRAGMA journal_mode=WAL;")
 	db.Exec("PRAGMA locking_mode=IMMEDIATE;")
@@ -42,7 +42,7 @@ func main() {
 	go func() {
 		<-sigc
 		fmt.Printf("found %d new posts overall\n", endCount-startCount)
-		db.Exec("vaccum;")
+		db.Exec("vacuum;")
 		db.Close()
 		os.Exit(0)
 	}()
