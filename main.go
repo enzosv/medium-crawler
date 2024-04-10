@@ -73,10 +73,6 @@ func main() {
 			if err != nil {
 				log.Panic("save error", err)
 			}
-			err = logPage(ctx, db, q)
-			if err != nil {
-				log.Panic("log error", err)
-			}
 			endCount, err = countPosts(ctx, db)
 			if err != nil {
 				log.Panic("count 2 error", err)
@@ -91,6 +87,10 @@ func main() {
 			if next == nil {
 				break
 			}
+		}
+		err = logPage(ctx, db, q)
+		if err != nil {
+			log.Panic("log error", err)
 		}
 	}
 }
