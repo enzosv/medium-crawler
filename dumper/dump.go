@@ -35,7 +35,7 @@ func main() {
 }
 
 func toCSV(posts []Post) error {
-	csvFile, err := os.Create("../docs/medium.csv")
+	csvFile, err := os.Create("../web/medium.csv")
 	if err != nil {
 		return err
 	}
