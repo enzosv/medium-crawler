@@ -1,11 +1,22 @@
+const is_omnivore = window.location.href.includes("omnivore");
+
+function buildLink(url) {
+  if (is_omnivore) {
+    return `<a href="javascript:void(0);" onclick="omnivore('${url}')">`;
+    // return `<a href=https://omnivore.app/api/save?url=${url}`;
+  }
+  return `<a href=${url}>`;
+}
+
 async function main() {
   let data = await fetch("./medium.csv").then((response) => response.text());
   data = data.split("\n").map((v) => v.split(","));
   data.pop(); // remove newline at end
   const freedium = window.location.href.includes("freedium");
-  const prefix = freedium
-    ? "https://freedium.cfd/https://medium.com/articles/"
-    : "https://medium.com/articles/";
+  const prefix =
+    freedium || is_omnivore
+      ? "https://freedium.cfd/https://medium.com/articles/"
+      : "https://medium.com/articles/";
   $("#example").DataTable({
     data: data,
     ordering: false,
@@ -15,7 +26,7 @@ async function main() {
         data: "title",
         render: function (data, type, row) {
           return `<div class="row">
-          <a href=${prefix}${row[2]}>
+          ${buildLink(prefix + row[2])}
           <h6>${row[0].replaceAll("|", ",")}</a> ${
             row[9] == 0
               ? ""
@@ -56,7 +67,6 @@ async function omnivore(link) {
     key = prompt("omnivore api key");
     localStorage.setItem("omnivore", key);
   }
-  console.log(key);
   const body = {
     query:
       "mutation SaveUrl($input: SaveUrlInput!) { saveUrl(input: $input) { ... on SaveSuccess { url clientRequestId } ... on SaveError { errorCodes message } } }",
@@ -69,7 +79,7 @@ async function omnivore(link) {
     },
   };
 
-  await fetch("https://api-prod.omnivore.app/api/graphql", {
+  const response = await fetch("https://api-prod.omnivore.app/api/graphql", {
     body: JSON.stringify(body),
     headers: {
       "Content-Type": "application/json",
@@ -77,5 +87,23 @@ async function omnivore(link) {
     },
     method: "POST",
   });
+  const data = await response.json();
+  const url = data?.data?.saveUrl?.url;
+
+  if (omnivore && url) {
+    window.open(url);
+    return;
+  }
+  const toastLiveExample = document.getElementById("liveToast");
+  const toast = new bootstrap.Toast(toastLiveExample);
+  const toastMessage = document.getElementById("toast");
+  if (url) {
+    toastMessage.innerHTML = `Saved! <a href=${url}>${url}</a>`;
+  } else {
+    console.log(response);
+    toastMessage.innerHTML = JSON.stringify(data);
+  }
+
+  toast.show();
 }
 main();
