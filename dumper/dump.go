@@ -69,6 +69,7 @@ func query() ([]Post, error) {
     FROM posts p
     LEFT OUTER JOIN collections c
         ON c.collection_id = p.collection
+	WHERE total_clap_count>1000 OR published_at > date('now'-'1 month')
     ORDER BY total_clap_count DESC
 	;`
 	rows, err := db.Query(query)
