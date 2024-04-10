@@ -58,10 +58,10 @@ func query() ([]Post, error) {
 		return nil, err
 	}
 	defer db.Close()
-	query := `SELECT title, total_clap_count claps, 
-    'https://medium.com/articles/' || post_id link, 
-    date(published_at/1000, 'unixepoch') publish_date,
-	COALESCE(c.name, '') collection, 
+	query := `SELECT title, total_clap_count, 
+    post_id, 
+    date(published_at/1000, 'unixepoch'),
+	COALESCE(c.name, ''), 
     recommend_count, response_count, reading_time, tags
     FROM posts p
     LEFT OUTER JOIN collections c

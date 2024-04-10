@@ -9,7 +9,10 @@ async function main() {
         data: "title",
         render: function (data, type, row) {
           return `<div>
-          <a href=${row[2]}>${row[0].replaceAll("|", ",")}</a><br>
+          <a href=https://medium.com/articles/${row[2]}>${row[0].replaceAll(
+            "|",
+            ","
+          )}</a><br>
           ${row[4] ? `<subtitle>in ${row[4]}` : ""}
           <img src="calendar-arrow-up-svgrepo-com.svg" width="16" height="16"/> ${
             row[3]
