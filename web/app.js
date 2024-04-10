@@ -2,6 +2,9 @@ async function main() {
   let data = await fetch("./medium.csv").then((response) => response.text());
   data = data.split("\n").map((v) => v.split(","));
   data.pop(); // remove newline at end
+  const prefix = window.location.href.includes("freedium")
+    ? "https://freedium.cfd/https://medium.com/articles/"
+    : "https://medium.com/articles/";
   $("#example").DataTable({
     data: data,
     ordering: false,
@@ -11,7 +14,7 @@ async function main() {
         data: "title",
         render: function (data, type, row) {
           return `<div class="row">
-          <a href=https://medium.com/articles/${row[2]}>
+          <a href=${prefix}${row[2]}>
           <h6>${row[0].replaceAll("|", ",")}</h6></a>
           <div>
           ${row[4] ? `in ${row[4]}` : ""}
@@ -24,9 +27,7 @@ async function main() {
           <img src="comment-svgrepo-com.svg" width="16" height="16"/> ${
             row[6]
           }<br>
-          <a href="https://omnivore.app/api/save?url=https://freedium.cfd/https://medium.com/articles/${
-            row[2]
-          }"></a>
+          <a href="https://omnivore.app/api/save?url=${prefix}${row[2]}"></a>
           ${row[8] ? row[8].replaceAll("|", ", ") : ""}
           </div>
           </div>`;
