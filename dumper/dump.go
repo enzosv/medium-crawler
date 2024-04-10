@@ -8,7 +8,7 @@ import (
 	"os"
 	"strings"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 )
 
 type Post struct {
@@ -26,11 +26,11 @@ type Post struct {
 func main() {
 	posts, err := query()
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 	err = toCSV(posts)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 }
 
