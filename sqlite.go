@@ -196,7 +196,7 @@ func save(ctx context.Context, db *sql.DB, parsed Parsed) error {
 func queryIds(ctx context.Context, db *sql.DB, table, key string) ([]string, error) {
 	rows, err := db.QueryContext(ctx, fmt.Sprintf("SELECT %s FROM %s;", key, table))
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 	defer rows.Close()
 	var ids []string
@@ -204,7 +204,7 @@ func queryIds(ctx context.Context, db *sql.DB, table, key string) ([]string, err
 		var id string
 		err = rows.Scan(&id)
 		if err != nil {
-			log.Fatal(err)
+			return nil, err
 		}
 		ids = append(ids, id)
 	}
@@ -218,7 +218,7 @@ func queryQueue(ctx context.Context, db *sql.DB, idChan chan string) error {
 	ORDER BY  total_clap_count desc
 	;`)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	queue := map[string]bool{}
 	for rows.Next() {
@@ -226,7 +226,7 @@ func queryQueue(ctx context.Context, db *sql.DB, idChan chan string) error {
 		var collection *string
 		err = rows.Scan(&creator, &collection)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 		item := fmt.Sprintf("users/%s/profile", creator)
 		_, ok := queue[item]
@@ -247,7 +247,7 @@ func queryQueue(ctx context.Context, db *sql.DB, idChan chan string) error {
 	// users
 	users, err := queryIds(ctx, db, "users", "user_id")
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	for _, id := range users {
 		item := fmt.Sprintf("users/%s/profile", id)
@@ -260,7 +260,7 @@ func queryQueue(ctx context.Context, db *sql.DB, idChan chan string) error {
 	//collections
 	collections, err := queryIds(ctx, db, "collections", "collection_id")
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	for _, id := range collections {
 		item := fmt.Sprintf("collections/%s", id)
@@ -273,7 +273,7 @@ func queryQueue(ctx context.Context, db *sql.DB, idChan chan string) error {
 	// tags
 	tags, err := queryIds(ctx, db, "tags", "slug")
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	for _, id := range tags {
 		item := fmt.Sprintf("tags/%s", id)
@@ -287,7 +287,7 @@ func queryQueue(ctx context.Context, db *sql.DB, idChan chan string) error {
 	return nil
 }
 
-func popularCollections(ctx context.Context, db *sql.DB) {
+func popularCollections(ctx context.Context, db *sql.DB) error {
 	query := `SELECT c.name, SUM(p.total_clap_count) 
 	FROM collections c
 	LEFT OUTER JOIN posts p 
@@ -295,12 +295,10 @@ func popularCollections(ctx context.Context, db *sql.DB) {
 	GROUP BY c.collection_id 
 	ORDER BY SUM(p.total_clap_count) DESC;`
 	_, err := db.QueryContext(ctx, query)
-	if err != nil {
-		log.Fatal(err)
-	}
+	return err
 }
 
-func popularUsers(ctx context.Context, db *sql.DB) {
+func popularUsers(ctx context.Context, db *sql.DB) error {
 	query := `SELECT u.user_id, SUM(p.total_clap_count)
 	FROM users u
 	LEFT OUTER JOIN posts p 
@@ -308,12 +306,10 @@ func popularUsers(ctx context.Context, db *sql.DB) {
 	GROUP BY u.user_id 
 	ORDER BY SUM(p.total_clap_count) DESC;`
 	_, err := db.QueryContext(ctx, query)
-	if err != nil {
-		log.Fatal(err)
-	}
+	return err
 }
 
-func popularPosts(ctx context.Context, db *sql.DB) {
+func popularPosts(ctx context.Context, db *sql.DB) error {
 	query := `SELECT title, total_clap_count claps, 'https://medium.com/articles/' || post_id, date(published_at/1000, 'unixepoch') publish_date, 
 	c.name collection, recommend_count , response_count , reading_time ,tags 
 	FROM posts p
@@ -321,9 +317,7 @@ func popularPosts(ctx context.Context, db *sql.DB) {
 		ON c.collection_id = p.collection 
 	ORDER BY total_clap_count DESC;`
 	_, err := db.QueryContext(ctx, query)
-	if err != nil {
-		log.Fatal(err)
-	}
+	return err
 }
 
 func logPage(ctx context.Context, db *sql.DB, link string) error {
