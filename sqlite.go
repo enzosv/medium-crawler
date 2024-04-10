@@ -58,8 +58,8 @@ func save(ctx context.Context, db *sql.DB, parsed Parsed) error {
 	if err != nil {
 		return err
 	}
+	defer tx.Rollback()
 	if len(parsed.posts) > 0 {
-		// TODO: upsert on post_id, updated_at. ignore on post_id
 		insert, err := tx.Prepare(`INSERT INTO posts(
 			post_id,
 			title,
@@ -121,70 +121,19 @@ func save(ctx context.Context, db *sql.DB, parsed Parsed) error {
 			}
 		}
 	}
-
-	if len(parsed.tags) > 0 {
-		insert, err := tx.Prepare("INSERT OR IGNORE INTO tags(slug) values(?)")
-		if err != nil {
-			return err
-		}
-		defer insert.Close()
-
-		logs, err := tx.Prepare("INSERT OR IGNORE INTO pages(link) values(?)")
-		if err != nil {
-			return err
-		}
-		defer logs.Close()
-
-		for _, tag := range parsed.tags {
-			_, err = insert.ExecContext(ctx, tag.Slug)
-			if err != nil {
-				return err
-			}
-			_, err = logs.ExecContext(ctx, fmt.Sprintf("tags/%s", tag.Slug))
-			if err != nil {
-				return err
-			}
-		}
-	}
-	if len(parsed.users) > 0 {
-		insert, err := tx.Prepare("INSERT OR IGNORE INTO users(user_id) values(?)")
-		if err != nil {
-			return err
-		}
-		defer insert.Close()
-		logs, err := tx.Prepare("INSERT OR IGNORE INTO pages(link) values(?)")
+	if len(parsed.pages) > 0 {
+		logs, err := tx.Prepare(`
+		INSERT INTO pages(id, name, page_type) 
+		values(?, ?, ?)
+		ON CONFLICT (id, page_type) DO UPDATE SET 
+			name = COALESCE(EXCLUDED.name, pages.name)
+		`)
 		if err != nil {
 			return err
 		}
 		defer logs.Close()
-		for _, user := range parsed.users {
-			_, err = insert.ExecContext(ctx, user.UserID)
-			if err != nil {
-				return err
-			}
-			_, err = logs.ExecContext(ctx, fmt.Sprintf("users/%s/profile", user.UserID))
-			if err != nil {
-				return err
-			}
-		}
-	}
-	if len(parsed.collections) > 0 {
-		insert, err := tx.Prepare("INSERT OR IGNORE INTO collections(collection_id, name) values(?, ?)")
-		if err != nil {
-			return err
-		}
-		defer insert.Close()
-		logs, err := tx.Prepare("INSERT OR IGNORE INTO pages(link) values(?)")
-		if err != nil {
-			return err
-		}
-		defer logs.Close()
-		for _, collection := range parsed.collections {
-			_, err = insert.ExecContext(ctx, collection.ID, collection.Name)
-			if err != nil {
-				return err
-			}
-			_, err = logs.ExecContext(ctx, fmt.Sprintf("collections/%s", collection.ID))
+		for _, page := range parsed.pages {
+			_, err = logs.ExecContext(ctx, page.ID, page.Name, page.PageType)
 			if err != nil {
 				return err
 			}
@@ -321,32 +270,35 @@ func popularPosts(ctx context.Context, db *sql.DB) error {
 	return err
 }
 
-func logPage(ctx context.Context, db *sql.DB, link string) error {
-	query := `INSERT INTO pages (link, last_query) 
-	values(?, ?)
-	ON CONFLICT(link) 
-	DO UPDATE SET last_query = EXCLUDED.last_query`
-	_, err := db.ExecContext(ctx, query, link, time.Now().Unix())
+func logPage(ctx context.Context, db *sql.DB, page Page) error {
+	// query := `INSERT INTO pages (link, last_query)
+	// values(?, ?)
+	// ON CONFLICT(link)
+	// DO UPDATE SET last_query = EXCLUDED.last_query`
+	query := `UPDATE pages SET last_query = ? WHERE id = ? AND page_type = ?`
+	_, err := db.ExecContext(ctx, query, time.Now().Unix(), page.ID, page.PageType)
 	return err
 }
 
-func queryPages(ctx context.Context, db *sql.DB, idChan chan string) error {
+func queryPages(ctx context.Context, db *sql.DB, idChan chan Page) error {
 	rows, err := db.QueryContext(ctx, `
-	SELECT link
+	SELECT id, page_type
 	FROM pages
-	ORDER BY  last_query
+	ORDER BY last_query
 	;`)
 	if err != nil {
 		return err
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var link string
-		err := rows.Scan(&link)
+		var id string
+		var page_type int
+
+		err := rows.Scan(&id, &page_type)
 		if err != nil {
 			return err
 		}
-		idChan <- link
+		idChan <- Page{id, nil, page_type}
 	}
 	return nil
 }

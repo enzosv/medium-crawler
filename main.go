@@ -24,7 +24,7 @@ func main() {
 	db.Exec("pragma temp_store = memory;")
 	// migrate(db)
 	ctx := context.Background()
-	queueChan := make(chan string)
+	queueChan := make(chan Page)
 	go func() {
 		err = queryPages(ctx, db, queueChan)
 		if err != nil {
@@ -49,14 +49,26 @@ func main() {
 
 	for {
 		q := <-queueChan
+		link := func() string {
+			switch q.PageType {
+			case 0:
+				return "tags/" + q.ID
+			case 1:
+				return "users/" + q.ID + "/profile"
+			case 2:
+				return "collections/" + q.ID
+			}
+			log.Panic("unhandled page type", q.PageType)
+			return ""
+		}()
 		var next *Next
 		for {
-			parsed, newNext, err := importMedium(q, next)
+
+			parsed, newNext, err := importMedium(link, next)
 			if err != nil {
 				log.Panic("fetch error", err)
 			}
-			if len(parsed.collections) == 0 && len(parsed.tags) == 0 &&
-				len(parsed.users) == 0 && len(parsed.posts) == 0 {
+			if len(parsed.pages) == 0 && len(parsed.posts) == 0 {
 				break
 			}
 			// go func() {
@@ -67,8 +79,8 @@ func main() {
 			if startCount == 0 {
 				startCount = previousCount
 			}
-			fmt.Printf("saving\n\t%d posts\n\t%d users\n\t%d collections\n\t%d tags\n",
-				len(parsed.posts), len(parsed.users), len(parsed.collections), len(parsed.tags))
+			fmt.Printf("saving\n\t%d posts\n\t%d pages\n",
+				len(parsed.posts), len(parsed.pages))
 			err = save(ctx, db, parsed)
 			if err != nil {
 				log.Panic("save error", err)

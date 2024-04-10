@@ -40,7 +40,8 @@ type Tag struct {
 }
 
 type User struct {
-	UserID string `json:"userId"`
+	UserID string  `json:"userId"`
+	Name   *string `json:"name"`
 }
 
 type Collection struct {
@@ -66,11 +67,15 @@ type Post struct {
 	} `json:"virtuals"`
 }
 
+type Page struct {
+	ID       string
+	Name     *string
+	PageType int
+}
+
 type Parsed struct {
-	tags        []Tag
-	users       []User
-	collections []Collection
-	posts       []Post
+	pages []Page
+	posts []Post
 }
 
 var lastRequest int64 = 0
@@ -134,28 +139,29 @@ func importMedium(path string, next *Next) (Parsed, *Next, error) {
 	if err != nil {
 		return Parsed{}, nil, err
 	}
+	var pages []Page
 
-	var users []User
 	for _, user := range res.Payload.References.User {
-		users = append(users, user)
+		pages = append(pages, Page{user.UserID, user.Name, 1})
 	}
-	var collections []Collection
 	for _, collection := range res.Payload.References.Collection {
-		collections = append(collections, collection)
+		pages = append(pages, Page{collection.ID, collection.Name, 2})
 	}
-	tags := res.Payload.RelatedTags
+	for _, tag := range res.Payload.RelatedTags {
+		pages = append(pages, Page{tag.Slug, nil, 0})
+	}
 	var posts []Post
 	for _, post := range res.Payload.References.Post {
 		posts = append(posts, post)
-		users = append(users, User{post.Creator})
+		pages = append(pages, Page{post.Creator, nil, 1})
 		if post.Collection != "" {
-			collections = append(collections, Collection{post.Collection, nil})
+			pages = append(pages, Page{post.Collection, nil, 2})
 		}
 		for _, tag := range post.Virtuals.Tags {
-			tags = append(tags, Tag{tag.Slug})
+			pages = append(pages, Page{tag.Slug, nil, 0})
 		}
 	}
-	parsed := Parsed{tags, users, collections, posts}
+	parsed := Parsed{pages, posts}
 	newNext := res.Payload.Paging.Next
 	if newNext != nil {
 		if next != nil && (newNext.To == next.To || newNext.Page == next.Page || reflect.DeepEqual(newNext.IgnoredIds, next.IgnoredIds)) {
