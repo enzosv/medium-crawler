@@ -9,9 +9,8 @@ function buildLink(url) {
 }
 
 async function main() {
-  let data = await fetch("./medium.csv").then((response) => response.text());
-  data = data.split("\n").map((v) => v.split(","));
-  data.pop(); // remove newline at end
+  const res = await fetch("./medium.json");
+  const data = await res.json();
   const freedium = window.location.href.includes("freedium");
   const prefix =
     freedium || is_omnivore
@@ -33,6 +32,7 @@ async function main() {
               : `<img src="paywall-svgrepo-com.svg" width="16" height="16"/>`
           }</h6>
           <div>
+          ${row[10] ? `by ${row[10]}` : ""}
           ${row[4] ? `in ${row[4]}` : ""}
           <img src="calendar-arrow-up-svgrepo-com.svg" width="16" height="16"/> ${
             row[3]
