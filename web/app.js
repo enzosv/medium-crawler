@@ -31,19 +31,36 @@ async function main() {
               ? ""
               : `<img src="paywall-svgrepo-com.svg" width="16" height="16"/>`
           }</h6>
-          <div>
-          ${row[10] ? `by ${row[10]}` : ""}
-          ${row[4] ? `in ${row[4]}` : ""}
-          <img src="calendar-arrow-up-svgrepo-com.svg" width="16" height="16"/> ${
-            row[3]
-          }<br>
+          <div class="container">
+          <div class="row">
+          <div class="col">
+            <img src="calendar-arrow-up-svgrepo-com.svg" width="16" height="16"/> ${
+              row[3]
+            }
+            </div>
+            <div class="col">
+            ${row[4] ? `in ${row[4]}` : ""}
+            </div>
+          <div class="col">
+            ${row[10] ? `by ${row[10]}` : ""}
+            </div>
+          </div>
+          <div class="row">
+          <div class="col">
           <img src="clap-svgrepo-com.svg" width="16" height="16"/> ${row[1]}
+          </div>
+          <div class="col">
           <img src="time-svgrepo-com.svg" width="16" height="16"/> ${row[7]}
+          </div>
+          <div class="col">
           <img src="share-svgrepo-com.svg" width="16" height="16"/> ${row[5]}
+          </div>
+          <div class="col">
           <img src="comment-svgrepo-com.svg" width="16" height="16"/> ${
             row[6]
-          }<br>
-          ${row[8] ? row[8].replaceAll("|", ", ") : ""}<br>
+          }</div>
+          </div>
+          ${row[8] ? row[8] : ""}<br>
           ${
             freedium
               ? `
