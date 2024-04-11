@@ -117,7 +117,6 @@ func normalFetch(url string) ([]byte, error) {
 	req.Header.Add("Accept-Encoding", "gzip, deflate, br")
 	req.Header.Add("Accept-Language", "en-US,en;q=0.9")
 	req.Header.Add("Connection", "keep-alive")
-	req.Header.Add("Cookie", "sid=1:HD6zmkuwLRF1pGGvo4U5EEJGrnQOFTH/RnDEqD0cQEppJbTFTIyOfboKIOI1ha6c; uid=lo_7ae8ebac44cb")
 	req.Header.Add("Host", "medium.com")
 	req.Header.Add("Sec-Fetch-Dest", "document")
 	req.Header.Add("Sec-Fetch-Mode", "navigate")
