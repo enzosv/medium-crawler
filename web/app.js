@@ -26,23 +26,23 @@ async function main() {
         render: function (data, type, row) {
           return `<div class="row">
           ${buildLink(prefix + row[2])}
-          <h6>${row[0].replaceAll("|", ",")}</a> ${
+          <h5>${row[0].replaceAll("|", ",")}</a> ${
             row[9] == 0
               ? ""
               : `<img src="paywall-svgrepo-com.svg" width="16" height="16"/>`
-          }</h6>
+          }</h5>
           <div class="container">
           <div class="row">
           <div class="col">
-            <img src="calendar-arrow-up-svgrepo-com.svg" width="16" height="16"/> ${
+            <img src="calendar-arrow-up-svgrepo-com.svg" width="16" height="16"/><small>${
               row[3]
-            }
+            }</small>
             </div>
             <div class="col">
-            ${row[4] ? `in ${row[4]}` : ""}
+            <small>${row[4] ? `in ${row[4]}` : ""}</small>
             </div>
           <div class="col">
-            ${row[10] ? `by ${row[10]}` : ""}
+          <small>${row[10] ? `by ${row[10]}` : ""}</small>
             </div>
           </div>
           <div class="row">
@@ -66,7 +66,10 @@ async function main() {
             row[6]
           )}</div>
           </div>
-          ${row[8] ? row[8] : ""}<br>
+          <div class="row">
+          <small>${row[8] ? row[8] : ""}</small>
+          </div>
+         
           ${
             freedium
               ? `
