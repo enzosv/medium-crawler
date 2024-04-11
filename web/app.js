@@ -32,16 +32,14 @@ async function main() {
               : `<img src="paywall-svgrepo-com.svg" width="16" height="16"/>`
           }</h5>
           </div>
-          <div class="row">
-            <div class="col">
+          <div class="row" style="background-color: red">
+            <div class="col-4" style="background-color: blue">
               <img src="calendar-arrow-up-svgrepo-com.svg" width="16" height="16"/><small>${
                 row[3]
               }</small>
             </div>
-            <div class="col">
+            <div class="col-8" style="background-color: green">
               <small>${row[4] ? `in ${row[4]}` : ""}</small>
-            </div>
-            <div class="col">
               <small>${row[10] ? `by ${row[10]}` : ""}</small>
             </div>
           </div>
