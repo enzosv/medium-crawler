@@ -32,7 +32,7 @@ async function main() {
               : `<img src="paywall-svgrepo-com.svg" width="16" height="16"/>`
           }</h5>
           </div>
-          <div class="row">
+          <div class="row g-0">
             <div class="col-4">
               <img src="calendar-arrow-up-svgrepo-com.svg" width="16" height="16"/><small>${
                 row[3]
@@ -43,7 +43,7 @@ async function main() {
               <small>${row[10] ? `by ${row[10]}` : ""}</small>
             </div>
           </div>
-          <div class="row">
+          <div class="row g-0">
             <div class="col">
               <img src="clap-svgrepo-com.svg" width="16" height="16"/> ${cleanNumber(
                 row[1]
@@ -64,7 +64,7 @@ async function main() {
               row[6]
             )}
           </div>
-          <div class="row">
+          <div class="row g-0">
           <small>${row[8] ? row[8] : ""}</small>
           </div>
           <button type="button" class="btn btn-link">
