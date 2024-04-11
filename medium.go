@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os/exec"
 	"reflect"
 	"strings"
 	"time"
@@ -78,42 +79,60 @@ type Parsed struct {
 	posts []Post
 }
 
+const sleepDuration = 4
+
 var lastRequest int64 = 0
 
 // https://github.com/enzosv/easy-ios/blob/dcdcfbcf6333ecaae08cb0dfe7f940225fbdafa4/easy/Models/Resource.swift#L11
 func fetchMedium(url string) (Response, error) {
 	dif := time.Now().Unix() - lastRequest
-	if dif < 3 {
+	if dif < sleepDuration {
 		// avoid rate limit
-		fmt.Println("sleeping", 3-dif)
-		time.Sleep(time.Second * time.Duration(3-dif))
+		fmt.Println("sleeping", sleepDuration-dif)
+		time.Sleep(time.Second * time.Duration(sleepDuration-dif))
 	}
 	lastRequest = time.Now().Unix()
 	fmt.Println("fetching", url)
 	var response Response
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	// out, err := normalFetch(url)
+	out, err := curlFetch(url) // alternate between the two to avoid captcha
 	if err != nil {
 		return response, err
 	}
-	req.Header.Add("accept", "application/json")
-	req.Header.Add("Referer", "https://twitter.com")
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return response, err
-	}
-	defer res.Body.Close()
-	body, err := io.ReadAll(res.Body)
-	if err != nil {
-		return response, err
-	}
-	res.Body.Close()
-	data := strings.TrimPrefix(string(body), "])}while(1);</x>")
+	data := strings.TrimPrefix(string(out), "])}while(1);</x>")
 
 	err = json.Unmarshal([]byte(data), &response)
 	if err != nil {
-		return response, err
+		return response, fmt.Errorf("json unmarshal %v", err)
 	}
 	return response, nil
+}
+
+func normalFetch(url string) ([]byte, error) {
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("construct request %v", err)
+	}
+	req.Header.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+	req.Header.Add("Accept-Encoding", "gzip, deflate, br")
+	req.Header.Add("Accept-Language", "en-US,en;q=0.9")
+	req.Header.Add("Connection", "keep-alive")
+	req.Header.Add("Cookie", "sid=1:HD6zmkuwLRF1pGGvo4U5EEJGrnQOFTH/RnDEqD0cQEppJbTFTIyOfboKIOI1ha6c; uid=lo_7ae8ebac44cb")
+	req.Header.Add("Host", "medium.com")
+	req.Header.Add("Sec-Fetch-Dest", "document")
+	req.Header.Add("Sec-Fetch-Mode", "navigate")
+	req.Header.Add("Sec-Fetch-Site", "none")
+	req.Header.Add("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15")
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("request %v: %v", err, req)
+	}
+	defer res.Body.Close()
+	return io.ReadAll(res.Body)
+}
+
+func curlFetch(url string) ([]byte, error) {
+	return exec.Command("curl", url).Output()
 }
 
 func importMedium(path string, next *Next) (Parsed, *Next, error) {
