@@ -74,7 +74,7 @@ func toStringArray(posts []Post) error {
 }
 
 func query() ([]Post, error) {
-	db, err := sql.Open("sqlite", "../medium.db")
+	db, err := sql.Open("sqlite", "../medium.db?mode=ro&_journal=WAL")
 	if err != nil {
 		return nil, err
 	}
