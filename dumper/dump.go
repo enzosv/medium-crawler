@@ -63,7 +63,7 @@ func toStringArray(posts []Post) error {
 		lines = append(lines, []any{
 			post.title, post.claps, post.link, post.publish_date, post.collection,
 			post.recommend_count, post.response_count, fmt.Sprintf("%.2f", post.reading_time),
-			strings.ReplaceAll(post.tags, ",", "|"), post.is_paid, post.creator,
+			post.tags, post.is_paid, post.creator,
 		})
 	}
 	file, err := json.Marshal(lines)
