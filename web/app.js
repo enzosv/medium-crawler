@@ -16,7 +16,7 @@ async function main() {
     freedium || is_omnivore
       ? "https://freedium.cfd/https://medium.com/articles/"
       : "https://medium.com/articles/";
-  $("#example").DataTable({
+  const table = $("#example").DataTable({
     data: data,
     ordering: false,
     order: [[1, "desc"]],
@@ -26,19 +26,19 @@ async function main() {
         render: function (data, type, row) {
           return `<div class="row">
             ${buildLink(prefix + row[2])}
-            <h5>${row[0].replaceAll("|", ",")}</a> ${
+            <h5>${row[0]}</a> ${
             row[9] == 0
               ? ""
               : `<img src="paywall-svgrepo-com.svg" width="16" height="16"/>`
           }</h5>
           </div>
-          <div class="row" style="background-color: red">
-            <div class="col-4" style="background-color: blue">
+          <div class="row">
+            <div class="col-4">
               <img src="calendar-arrow-up-svgrepo-com.svg" width="16" height="16"/><small>${
                 row[3]
               }</small>
             </div>
-            <div class="col-8" style="background-color: green">
+            <div class="col-8">
               <small>${row[4] ? `in ${row[4]}` : ""}</small>
               <small>${row[10] ? `by ${row[10]}` : ""}</small>
             </div>
@@ -67,24 +67,52 @@ async function main() {
           <div class="row">
           <small>${row[8] ? row[8] : ""}</small>
           </div>
-         
-          ${
-            freedium
-              ? `
-              <div class="row">
-                <a title="Save to Omnivore" onclick="omnivore('${prefix}${row[2]}')" href="javascript:void(0);">
-                <svg width="26" height="26" fill="none">
-                <path d="M8.42285 17.9061V10.5447C8.42285 9.91527 9.16173 9.55951 9.65432 9.99737L11.9257 13.3087C12.3909 13.6918 13.0477 13.6918 13.5129 13.3087L15.7296 10.0247C16.2222 9.61424 16.961 9.94263 16.961 10.5721V14.458C16.961 16.3463 18.2199 17.8788 20.1081 17.8788H20.1629C21.7775 17.8788 23.1731 16.7841 23.5563 15.2243C23.7478 14.4033 23.912 13.5549 23.912 12.8982C23.8847 6.46715 18.4388 1.596 11.9257 2.03385C6.39776 2.41698 1.9371 6.87764 1.55397 12.4056C1.11612 18.9187 6.26093 24.3645 12.7193 24.3645" stroke="white" stroke-width="2.18182" stroke-miterlimit="10"></path>
-                </svg></a>
-              </div>`
-              : ""
-          }
+          <button type="button" class="btn btn-link">
+          <img src="share-ios-export-svgrepo-com.svg" width="24" height="24"/>
+          </button>
         </div>`;
         },
       },
     ],
   });
+
+  table.on("click", "button", function (e) {
+    const data = table.row(e.target.closest("tr")).data();
+    share(data[0], prefix + data[2]);
+  });
+
+  table.on("touchend", "button", function (e) {
+    const data = table.row(e.target.closest("tr")).data();
+    share(data[0], prefix + data[2]);
+  });
 }
+
+function share(title, link) {
+  if (navigator.share) {
+    navigator.share({
+      title: title,
+      url: link,
+    });
+    return;
+  }
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(link);
+    return;
+  }
+  console.log(navigator);
+}
+
+// ${
+//   freedium
+//     ? `
+//     <div class="row">
+//       <a title="Save to Omnivore" onclick="omnivore('${prefix}${row[2]}')" href="javascript:void(0);">
+//       <svg width="26" height="26" fill="none">
+//       <path d="M8.42285 17.9061V10.5447C8.42285 9.91527 9.16173 9.55951 9.65432 9.99737L11.9257 13.3087C12.3909 13.6918 13.0477 13.6918 13.5129 13.3087L15.7296 10.0247C16.2222 9.61424 16.961 9.94263 16.961 10.5721V14.458C16.961 16.3463 18.2199 17.8788 20.1081 17.8788H20.1629C21.7775 17.8788 23.1731 16.7841 23.5563 15.2243C23.7478 14.4033 23.912 13.5549 23.912 12.8982C23.8847 6.46715 18.4388 1.596 11.9257 2.03385C6.39776 2.41698 1.9371 6.87764 1.55397 12.4056C1.11612 18.9187 6.26093 24.3645 12.7193 24.3645" stroke="white" stroke-width="2.18182" stroke-miterlimit="10"></path>
+//       </svg></a>
+//     </div>`
+//     : ""
+// }
 
 function cleanNumber(number) {
   if (number > 1000) {
