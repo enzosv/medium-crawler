@@ -32,40 +32,46 @@ async function main() {
               : `<img src="paywall-svgrepo-com.svg" width="16" height="16"/>`
           }</h5>
           </div>
-          <div class="row g-0">
-            <div class="col-4">
-              <img src="calendar-arrow-up-svgrepo-com.svg" width="16" height="16"/><small>${
+          <div class="row">
+            <div class="col-auto">
+              <img src="calendar-arrow-up-svgrepo-com.svg" width="16" height="16"/><small> ${formatDate(
                 row[3]
+              )}</small>
+            </div>
+            <div class="col-auto">
+              <small>${
+                row[4]
+                  ? `<img src="collection-svgrepo-com.svg" width="16" height="16"/> ${row[4]}`
+                  : ""
               }</small>
             </div>
-            <div class="col-8">
-              <small>${row[4] ? `in ${row[4]}` : ""}</small>
-              <small>${row[10] ? `by ${row[10]}` : ""}</small>
+            <div class="col-auto">
+            <small>${row[10] ? `by ${row[10]}` : ""}</small>
             </div>
           </div>
-          <div class="row g-0">
-            <div class="col">
+          <div class="row">
+            <div class="col-auto">
               <img src="clap-svgrepo-com.svg" width="16" height="16"/> ${cleanNumber(
                 row[1]
               )}
             </div>
-            <div class="col">
+            <div class="col-auto">
               <img src="time-svgrepo-com.svg" width="16" height="16"/> ${cleanNumber(
                 row[7]
               )}
             </div>
-            <div class="col">
+            <div class="col-auto">
               <img src="share-svgrepo-com.svg" width="16" height="16"/> ${cleanNumber(
                 row[5]
               )}
             </div>
-          <div class="col">
+          <div class="col-auto">
             <img src="comment-svgrepo-com.svg" width="16" height="16"/> ${cleanNumber(
               row[6]
             )}
           </div>
-          <div class="row g-0">
-          <small>${row[8] ? row[8] : ""}</small>
+          <div class="row">
+          <small>${row[8] ? row[8].split(",").join(", ") : ""}</small>
           </div>
           <button type="button" class="btn btn-link">
           <img src="share-ios-export-svgrepo-com.svg" width="24" height="24"/>
@@ -85,6 +91,25 @@ async function main() {
     const data = table.row(e.target.closest("tr")).data();
     share(data[0], prefix + data[2]);
   });
+}
+
+function formatDate(date) {
+  const month = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+  const d = new Date(date);
+  return month[d.getUTCMonth()] + " " + d.getFullYear();
 }
 
 function share(title, link) {
