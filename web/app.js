@@ -47,18 +47,24 @@ async function main() {
           </div>
           <div class="row">
           <div class="col">
-          <img src="clap-svgrepo-com.svg" width="16" height="16"/> ${row[1]}
+          <img src="clap-svgrepo-com.svg" width="16" height="16"/> ${cleanNumber(
+            row[1]
+          )}
           </div>
           <div class="col">
-          <img src="time-svgrepo-com.svg" width="16" height="16"/> ${row[7]}
+          <img src="time-svgrepo-com.svg" width="16" height="16"/> ${cleanNumber(
+            row[7]
+          )}
           </div>
           <div class="col">
-          <img src="share-svgrepo-com.svg" width="16" height="16"/> ${row[5]}
+          <img src="share-svgrepo-com.svg" width="16" height="16"/> ${cleanNumber(
+            row[5]
+          )}
           </div>
           <div class="col">
-          <img src="comment-svgrepo-com.svg" width="16" height="16"/> ${
+          <img src="comment-svgrepo-com.svg" width="16" height="16"/> ${cleanNumber(
             row[6]
-          }</div>
+          )}</div>
           </div>
           ${row[8] ? row[8] : ""}<br>
           ${
@@ -76,6 +82,13 @@ async function main() {
       },
     ],
   });
+}
+
+function cleanNumber(number) {
+  if (number > 1000) {
+    return Math.round(number / 1000) + "k";
+  }
+  return Math.round(number);
 }
 
 async function omnivore(link) {
