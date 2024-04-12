@@ -92,7 +92,11 @@ func query() ([]Post, error) {
 	LEFT OUTER JOIN pages u
 		ON u.id = p.creator
 		AND u.page_type = 1
-	WHERE total_clap_count > 1000 OR published_at > date('now', '-1 month')
+	WHERE total_clap_count > 10000
+	OR (
+		date(published_at/1000, 'unixepoch') > date('now', '-1 month')
+		AND total_clap_count > 1000
+	)
     ORDER BY total_clap_count DESC
 	;`
 	rows, err := db.Query(query)
