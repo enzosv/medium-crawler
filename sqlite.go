@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
@@ -12,35 +11,6 @@ import (
 )
 
 // TODO: parse https://topmediumstories.com/data/medium_1539563874.json
-
-func migrate(db *sql.DB) {
-	migration := `
-	CREATE TABLE tags (slug TEXT NOT NULL primary key);
-	CREATE TABLE users (user_id TEXT NOT NULL primary key);
-	CREATE TABLE collections (collection_id TEXT NOT NULL primary key, name TEXT);
-	CREATE TABLE posts (
-		post_id TEXT NOT NULL primary key,
-		title TEXT NOT NULL,
-		published_at INTEGER NOT NULL,
-		updated_at INTEGER,
-		collection TEXT,
-		creator TEXT NOT NULL,
-		is_paid INTEGER NOT NULL default 0,
-		reading_time REAL,
-		total_clap_count INTEGER,
-		tags TEXT,
-		subtitle TEXT,
-		recommend_count INTEGER,
-		response_count INTEGER
-	)
-	`
-	_, err := db.Exec(migration)
-	if err != nil {
-		log.Printf("%q: %s\n", err, migration)
-		return
-	}
-
-}
 
 func countPosts(ctx context.Context, db *sql.DB) (int, error) {
 	var count int
@@ -284,7 +254,7 @@ func queryPages(ctx context.Context, db *sql.DB, idChan chan Page) error {
 	rows, err := db.QueryContext(ctx, `
 	SELECT id, page_type
 	FROM pages
-	ORDER BY last_query
+	ORDER BY last_query, page_type DESC
 	;`)
 	if err != nil {
 		return err
