@@ -94,8 +94,8 @@ func fetchMedium(url string) (Response, error) {
 	lastRequest = time.Now().Unix()
 	fmt.Println("fetching", url)
 	var response Response
-	// out, err := normalFetch(url)
-	out, err := curlFetch(url) // alternate between the two to avoid captcha
+	out, err := normalFetch(url)
+	// out, err := curlFetch(url) // alternate between the two to avoid captcha
 	if err != nil {
 		return response, err
 	}
@@ -103,7 +103,7 @@ func fetchMedium(url string) (Response, error) {
 
 	err = json.Unmarshal([]byte(data), &response)
 	if err != nil {
-		return response, fmt.Errorf("json unmarshal %v", err)
+		return response, fmt.Errorf("json unmarshal %v: %v", data, err)
 	}
 	return response, nil
 }
@@ -113,15 +113,15 @@ func normalFetch(url string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("construct request %v", err)
 	}
-	req.Header.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
-	req.Header.Add("Accept-Encoding", "gzip, deflate, br")
-	req.Header.Add("Accept-Language", "en-US,en;q=0.9")
-	req.Header.Add("Connection", "keep-alive")
-	req.Header.Add("Host", "medium.com")
-	req.Header.Add("Sec-Fetch-Dest", "document")
-	req.Header.Add("Sec-Fetch-Mode", "navigate")
-	req.Header.Add("Sec-Fetch-Site", "none")
-	req.Header.Add("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15")
+	// req.Header.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+	// req.Header.Add("Accept-Encoding", "gzip, deflate, br")
+	// req.Header.Add("Accept-Language", "en-US,en;q=0.9")
+	// req.Header.Add("Connection", "keep-alive")
+	// req.Header.Add("Host", "medium.com")
+	// req.Header.Add("Sec-Fetch-Dest", "document")
+	// req.Header.Add("Sec-Fetch-Mode", "navigate")
+	// req.Header.Add("Sec-Fetch-Site", "none")
+	// req.Header.Add("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15")
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("request %v: %v", err, req)
