@@ -84,7 +84,7 @@ func query() ([]Post, error) {
     date(published_at, 'unixepoch'),
 	COALESCE(u.name, ''),
 	COALESCE(c.name, ''), 
-    recommend_count, response_count, reading_time, tags, is_paid
+    recommend_count, response_count, reading_time, COALESCE(tags,''), is_paid
     FROM posts p
     LEFT OUTER JOIN pages c
         ON c.id = p.collection
