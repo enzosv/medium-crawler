@@ -58,6 +58,7 @@ type Post struct {
 	Collection  string `json:"homeCollectionId"`
 	Creator     string `json:"creatorId"`
 	IsPaid      bool   `json:"isSubscriptionLocked"`
+	IsResponse  string `json:"inResponseToMediaResourceId"`
 	Virtuals    struct {
 		ReadingTime    float64 `json:"readingTime"`
 		TotalClapCount int     `json:"totalClapCount"`
@@ -170,6 +171,9 @@ func importMedium(path string, next *Next) (Parsed, *Next, error) {
 	}
 	var posts []Post
 	for _, post := range res.Payload.References.Post {
+		if post.IsResponse != "" {
+			continue
+		}
 		posts = append(posts, post)
 		pages = append(pages, Page{post.Creator, nil, 1})
 		if post.Collection != "" {
