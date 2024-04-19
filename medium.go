@@ -95,8 +95,8 @@ func fetchMedium(url string) (Response, error) {
 	lastRequest = time.Now().Unix()
 	fmt.Println("fetching", url)
 	var response Response
-	out, err := normalFetch(url)
-	// out, err := curlFetch(url) // alternate between the two to avoid captcha
+	// out, err := normalFetch(url)
+	out, err := curlFetch(url) // alternate between the two to avoid captcha
 	if err != nil {
 		return response, err
 	}
