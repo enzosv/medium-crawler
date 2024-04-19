@@ -81,7 +81,7 @@ func query() ([]Post, error) {
 	defer db.Close()
 	query := `SELECT title, total_clap_count, 
     post_id, 
-    date(published_at/1000, 'unixepoch'),
+    date(published_at, 'unixepoch'),
 	COALESCE(u.name, ''),
 	COALESCE(c.name, ''), 
     recommend_count, response_count, reading_time, tags, is_paid
@@ -93,10 +93,8 @@ func query() ([]Post, error) {
 		ON u.id = p.creator
 		AND u.page_type = 1
 	WHERE total_clap_count > 10000
-	OR (
-		date(published_at/1000, 'unixepoch') > date('now', '-1 month')
-		AND total_clap_count > 1000
-	)
+	OR total_clap_count/(julianday('now')-julianday(published_at, 'unixepoch'))  > 100
+
     ORDER BY total_clap_count DESC
 	;`
 	rows, err := db.Query(query)
