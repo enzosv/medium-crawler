@@ -93,7 +93,7 @@ func query() ([]Post, error) {
 		ON u.id = p.creator
 		AND u.page_type = 1
 	WHERE total_clap_count > 10000
-	OR total_clap_count/(julianday('now')-julianday(published_at, 'unixepoch'))  > 100
+	OR (total_clap_count > 50 AND total_clap_count/(julianday('now')-julianday(published_at, 'unixepoch'))  > 100)
 
     ORDER BY total_clap_count DESC
 	;`
