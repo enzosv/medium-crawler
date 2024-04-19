@@ -25,7 +25,7 @@
     ></script>
     <script src="//cdn.datatables.net/2.0.3/js/dataTables.min.js"></script>
   </head>
-  <script src="./app.js"></script>
+  <script src="./main.js"></script>
   <body>
     <style>
       img {
@@ -34,27 +34,24 @@
       }
     </style>
     <div class="p-2">
+      <ul class="list-group list-group-horizontal">
+        <li class="list-group-item">
+          <button id="default" type="button" class="btn">Default</button>
+        </li>
+        <li class="list-group-item">
+          <button id="disliked" type="button" class="btn">Disliked</button>
+        </li>
+        <li class="list-group-item">
+          <button id="shared" type="button" class="btn">Shared</button>
+        </li>
+        <li class="list-group-item">
+          <button id="liked" type="button" class="btn">Liked</button>
+        </li>
+        <li class="list-group-item">
+          <button id="all" type="button" class="btn">All</button>
+        </li>
+      </ul>
       <table id="example" class="table table-striped"></table>
     </div>
   </body>
-  <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
-    <div
-      id="liveToast"
-      class="toast"
-      role="alert"
-      aria-live="assertive"
-      aria-atomic="true"
-    >
-      <div class="toast-header">
-        <strong class="me-auto">Omnivore</strong>
-        <button
-          type="button"
-          class="btn-close"
-          data-bs-dismiss="toast"
-          aria-label="Close"
-        ></button>
-      </div>
-      <div class="toast-body" id="toast"></div>
-    </div>
-  </div>
 </html>
