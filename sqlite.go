@@ -45,7 +45,7 @@ func save(ctx context.Context, db *sql.DB, parsed Parsed) error {
 			recommend_count,
 			response_count
 		) values(
-			?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+			?, ?, ?, ?, NULLIF(?,''), ?, ?, ?, ?, NULLIF(?,''), NULLIF(?,''), ?, ?
 		)
 		ON CONFLICT(post_id) 
   		DO UPDATE SET 
