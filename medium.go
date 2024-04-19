@@ -132,7 +132,8 @@ func normalFetch(url string) ([]byte, error) {
 }
 
 func curlFetch(url string) ([]byte, error) {
-	return exec.Command("curl", url).Output()
+	// return exec.Command("curl", url).Output()
+	return exec.Command("curl_chrome99", "-L", url).Output()
 }
 
 func importMedium(path string, next *Next) (Parsed, *Next, error) {
