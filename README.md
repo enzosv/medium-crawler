@@ -15,4 +15,18 @@
 
 ## I want to update the list
 
+### Requirements
+
+- [curl impersonate](https://github.com/lwthiker/curl-impersonate)
+- go v1.21.0+
+  - untested on older versions
+
+### Run
+
 - `go run .`
+
+# Notes
+
+- Some of the posts might be responses. I checked too late.
+- This probably breaks medium TOS
+- The list/db isn't always updated and is far from comprehensive
