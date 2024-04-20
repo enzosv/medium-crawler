@@ -11,7 +11,33 @@ import (
 )
 
 // TODO: parse https://topmediumstories.com/data/medium_1539563874.json
-
+func printStats(ctx context.Context, db *sql.DB) error {
+	rows, err := db.QueryContext(ctx, `
+	select page_type, 
+count(*) filter(where last_query is not null) queried,
+count(*) 
+from pages 
+group by page_type 
+union all
+select 'posts', count(*), 0 from posts;`)
+	if err != nil {
+		return err
+	}
+	fmt.Println("")
+	defer rows.Close()
+	for rows.Next() {
+		var page_type string
+		var count int
+		var total int
+		err = rows.Scan(&page_type, &count, &total)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("%s\t%d\t%d\n", page_type, count, total)
+	}
+	fmt.Println("")
+	return rows.Close()
+}
 func countPosts(ctx context.Context, db *sql.DB) (int, error) {
 	var count int
 	countQuery := db.QueryRowContext(ctx, "select count(*) from posts;")
@@ -250,25 +276,27 @@ func logPage(ctx context.Context, db *sql.DB, page Page) error {
 	return err
 }
 
-func queryPages(ctx context.Context, db *sql.DB, idChan chan Page) error {
+func queryPages(ctx context.Context, db *sql.DB) ([]Page, error) {
 	rows, err := db.QueryContext(ctx, `
 	SELECT id, page_type
 	FROM pages
-	ORDER BY last_query, page_type DESC
+	ORDER BY last_query, page_type DESC, name DESC
+	LIMIT 10
 	;`)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer rows.Close()
+	var pages []Page
 	for rows.Next() {
 		var id string
 		var page_type int
 
 		err := rows.Scan(&id, &page_type)
 		if err != nil {
-			return err
+			return pages, nil
 		}
-		idChan <- Page{id, nil, page_type}
+		pages = append(pages, Page{id, nil, page_type})
 	}
-	return nil
+	return pages, nil
 }

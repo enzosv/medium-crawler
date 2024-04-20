@@ -5,34 +5,39 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
+	"os/exec"
 	"os/signal"
 	"syscall"
+
+	"github.com/joho/godotenv"
 )
 
-func main() {
+var startCount = 0
 
+func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 	db, err := sql.Open("sqlite", "./medium.db")
 	if err != nil {
 		log.Panic(err)
 	}
-	defer db.Exec("vacuum;")
 	defer db.Close()
+	// db.SetMaxOpenConns(1)
 	db.Exec("PRAGMA journal_mode=WAL;")
-	db.Exec("PRAGMA locking_mode=IMMEDIATE;")
 	db.Exec("pragma synchronous = normal;")
 	db.Exec("pragma temp_store = memory;")
-	// migrate(db)
+	db.Exec("pragma mmap_size = 30000000000;")
 	ctx := context.Background()
-	queueChan := make(chan Page)
-	go func() {
-		err = queryPages(ctx, db, queueChan)
-		if err != nil {
-			log.Panic("queue error", err)
-		}
-	}()
-	startCount := 0
-	endCount := 0
+
+	// pg, err := newDatabase(ctx, os.Getenv("PG_URL"))
+	// if err != nil {
+	// 	log.Panic(err)
+	// }
+
 	sigc := make(chan os.Signal, 1)
 	signal.Notify(sigc,
 		syscall.SIGHUP,
@@ -41,68 +46,110 @@ func main() {
 		syscall.SIGQUIT)
 	go func() {
 		<-sigc
+		endCount, _ := countPosts(ctx, db)
 		fmt.Printf("found %d new posts overall\n", endCount-startCount)
-		db.Exec("vacuum;")
 		db.Close()
+		err = exec.Command("sqlite3", "medium.db", "vacuum").Run()
+		if err != nil {
+			log.Fatal(err)
+		}
 		os.Exit(0)
 	}()
-
-	for {
-		q := <-queueChan
-		link := func() string {
-			switch q.PageType {
-			case 0:
-				return "tags/" + q.ID
-			case 1:
-				return "users/" + q.ID + "/profile"
-			case 2:
-				return "collections/" + q.ID
+	go func() {
+		printStats(ctx, db)
+		for {
+			err = importMedium(ctx, db)
+			if err != nil {
+				log.Panic(err)
 			}
-			log.Panic("unhandled page type", q.PageType)
-			return ""
-		}()
+			printStats(ctx, db)
+		}
+	}()
+
+	// for {
+	// 	var char rune
+	// 	_, err := fmt.Scanf("%c", &char)
+	// 	if err != nil {
+	// 		log.Fatal(err)
+	// 	}
+
+	// }
+
+	http.HandleFunc("/medium", api())
+	http.Handle("/", http.FileServer(http.Dir("./web")))
+	err = http.ListenAndServe("0.0.0.0:8080", nil)
+	if err != nil {
+		log.Panic(err)
+	}
+
+}
+
+func generateLink(page Page) (string, error) {
+	switch page.PageType {
+	case 0:
+		return "tags/" + page.ID, nil
+	case 1:
+		return "users/" + page.ID + "/profile", nil
+	case 2:
+		return "collections/" + page.ID, nil
+	}
+	return "", fmt.Errorf("unhandled page type: %d", page.PageType)
+}
+
+func importMedium(ctx context.Context, db *sql.DB) error {
+	previousCount, err := countPosts(ctx, db)
+	if err != nil {
+		return fmt.Errorf("count error: %v", err)
+	}
+	if startCount == 0 {
+		startCount = previousCount
+	}
+	pages, err := queryPages(ctx, db)
+	if err != nil {
+		log.Panic("queue error: ", err)
+	}
+	for _, page := range pages {
+		link, err := generateLink(page)
+		if err != nil {
+			return fmt.Errorf("page error: %v", err)
+		}
 		var next *Next
 		for {
-
-			parsed, newNext, err := importMedium(link, next)
+			parsed, newNext, err := parseMedium(link, next)
 			if err != nil {
-				log.Panic("fetch error", err)
+				return fmt.Errorf("fetch error: %v", err)
 			}
 			if len(parsed.pages) == 0 && len(parsed.posts) == 0 {
 				break
 			}
-			// go func() {
-			previousCount, err := countPosts(ctx, db)
-			if err != nil {
-				log.Panic("count error", err)
-			}
-			if startCount == 0 {
-				startCount = previousCount
-			}
-			fmt.Printf("saving\n\t%d posts\n\t%d pages\n",
-				len(parsed.posts), len(parsed.pages))
+
+			// fmt.Printf("\tsaving \t%d posts \t%d pages",
+			// 	len(parsed.posts), len(parsed.pages))
 			err = save(ctx, db, parsed)
 			if err != nil {
-				log.Panic("save error", err)
+				return fmt.Errorf("save error: %v", err)
 			}
-			endCount, err = countPosts(ctx, db)
-			if err != nil {
-				log.Panic("count 2 error", err)
-			}
-			fmt.Printf("found %d new posts\n", endCount-previousCount)
-			// if newCount == previousCount {
-			// fast mode
-			// break
+
+			// err = pg.save(ctx, parsed)
+			// if err != nil {
+			// 	log.Panic("save pg error", err)
 			// }
-			// }()
 			next = newNext
 			if next == nil {
 				break
 			}
 		}
-		err = logPage(ctx, db, q)
+		// fmt.Printf("\tfetched %d: %s", q.PageType, q.ID)
+		err = logPage(ctx, db, page)
 		if err != nil {
-			log.Panic("log error", err)
+			return fmt.Errorf("log error: %v", err)
 		}
 	}
+	endCount, err := countPosts(ctx, db)
+	if err != nil {
+		log.Panic("count 2 error", err)
+	}
+	fmt.Printf("found %d new posts\n", endCount-previousCount)
+
+	return nil
 }

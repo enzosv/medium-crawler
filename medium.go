@@ -90,11 +90,11 @@ func fetchMedium(url string) (Response, error) {
 	dif := time.Now().Unix() - lastRequest
 	if dif < sleepDuration {
 		// avoid rate limit
-		fmt.Println("sleeping", sleepDuration-dif)
+		// fmt.Println("\tsleeping", sleepDuration-dif)
 		time.Sleep(time.Second * time.Duration(sleepDuration-dif))
 	}
 	lastRequest = time.Now().Unix()
-	fmt.Println("fetching", url)
+	// fmt.Println("\tfetching", url)
 	var response Response
 	// out, err := normalFetch(url)
 	out, err := curlFetch(url) // alternate between the two to avoid captcha
@@ -105,7 +105,7 @@ func fetchMedium(url string) (Response, error) {
 
 	err = json.Unmarshal([]byte(data), &response)
 	if err != nil {
-		return response, fmt.Errorf("json unmarshal %v: %v", data, err)
+		return response, fmt.Errorf("json unmarshal %v: %v: %s", data, err, url)
 	}
 	return response, nil
 }
@@ -115,15 +115,20 @@ func normalFetch(url string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("construct request %v", err)
 	}
-	// req.Header.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+	// req.mode = "cors"
+	// req.redirect = "follow"
+	// req.referrerPolicy = "strict-origin-when-cross-origin"
+	// req.credentials = "include"
+	req.Header.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
 	// req.Header.Add("Accept-Encoding", "gzip, deflate, br")
-	// req.Header.Add("Accept-Language", "en-US,en;q=0.9")
+	req.Header.Add("Accept-Language", "en-US,en;q=0.9")
 	// req.Header.Add("Connection", "keep-alive")
+	// req.Header.Add("Cookie", "sid=1:HX8nlHNLjiXC4F2KBZ13TpWPoUVAIvmFaRqL1hF5zfUbl7CArkSdWuvXjtzATgNT; uid=lo_9753a3f9c9d7")
 	// req.Header.Add("Host", "medium.com")
 	// req.Header.Add("Sec-Fetch-Dest", "document")
 	// req.Header.Add("Sec-Fetch-Mode", "navigate")
 	// req.Header.Add("Sec-Fetch-Site", "none")
-	// req.Header.Add("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15")
+	req.Header.Add("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15")
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("request %v: %v", err, req)
@@ -137,7 +142,7 @@ func curlFetch(url string) ([]byte, error) {
 	return exec.Command("curl_chrome99", "-L", url).Output()
 }
 
-func importMedium(path string, next *Next) (Parsed, *Next, error) {
+func parseMedium(path string, next *Next) (Parsed, *Next, error) {
 	base := fmt.Sprintf("%s/_/api/%s/stream", ROOTURL, path)
 
 	if next != nil {
