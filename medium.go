@@ -51,15 +51,16 @@ type Collection struct {
 }
 
 type Post struct {
-	ID          string `json:"id"`
-	Title       string `json:"title"`
-	PublishedAt int64  `json:"firstPublishedAt"`
-	UpdatedAt   int64  `json:"updatedAt"`
-	Collection  string `json:"homeCollectionId"`
-	Creator     string `json:"creatorId"`
-	IsPaid      bool   `json:"isSubscriptionLocked"`
-	IsResponse  string `json:"inResponseToMediaResourceId"`
-	Virtuals    struct {
+	ID                string `json:"id"`
+	Title             string `json:"title"`
+	PublishedAt       int64  `json:"firstPublishedAt"`
+	UpdatedAt         int64  `json:"updatedAt"`
+	Collection        string `json:"homeCollectionId"`
+	Creator           string `json:"creatorId"`
+	IsPaid            bool   `json:"isSubscriptionLocked"`
+	IsResponseToMedia string `json:"inResponseToMediaResourceId"`
+	IsResponseToPost  string `json:"inResponseToPostId"`
+	Virtuals          struct {
 		ReadingTime    float64 `json:"readingTime"`
 		TotalClapCount int     `json:"totalClapCount"`
 		Tags           []Tag   `json:"tags"`
@@ -172,7 +173,7 @@ func importMedium(path string, next *Next) (Parsed, *Next, error) {
 	}
 	var posts []Post
 	for _, post := range res.Payload.References.Post {
-		if post.IsResponse != "" {
+		if post.IsResponseToPost != "" || post.IsResponseToMedia != "" {
 			continue
 		}
 		posts = append(posts, post)
