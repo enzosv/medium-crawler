@@ -4,3 +4,4 @@
 *.db-wal
 medium-crawler
 *.csv
+.env
