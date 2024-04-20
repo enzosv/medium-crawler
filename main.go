@@ -93,6 +93,7 @@ func generateLink(page Page) (string, error) {
 	case 2:
 		return "collections/" + page.ID, nil
 	}
+	// TODO: /_/api/posts/*/related
 	return "", fmt.Errorf("unhandled page type: %d", page.PageType)
 }
 
