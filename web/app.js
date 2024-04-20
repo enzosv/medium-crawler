@@ -114,7 +114,7 @@ async function main() {
   for (const d of data) {
     const row = {
       title: d[0],
-      claps: d[1],
+      total_clap_count: d[1],
       post_id: d[2],
       published_at: d[3],
       collection: d[4],
