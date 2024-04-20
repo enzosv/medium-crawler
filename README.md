@@ -7,8 +7,12 @@
 
 ## I just want the list
 
-1. Go to https://enzosv.github.io/medium-crawler/
+- Go to https://enzosv.github.io/medium-crawler/
+
+## I want to analyze the list
+
+- `sqlite3 medium.db`
 
 ## I want to update the list
 
-1. `go run .`
+- `go run .`
